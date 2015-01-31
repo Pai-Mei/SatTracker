@@ -15,9 +15,13 @@ namespace SatTracker
 
 	public partial class fmViewer : Form
 	{
-		public DateTime CurrentTimeStamp = DateTime.Now;//new DateTime(DateTime.Now.Year, 6, 21);
-
-		public Eci SatPos;
+		public TimeSpan TimeShift = new TimeSpan();
+		public DateTime CurrentTimeStamp
+		{
+			get { return DateTime.UtcNow.Add(TimeShift); } //new DateTime(DateTime.Now.Year, 6, 21);
+		}
+		public List<Eci> SatPos = new List<Eci>();
+		public List<Satellite> Sats = new List<Satellite>();
 
 		float DayAngle = 0;
 		float YearAngle = 0;
@@ -100,13 +104,31 @@ namespace SatTracker
 			};
 			timer.Start();
 
-			string str1 = "ISS (ZARYA)";
-			string str2 = "1 25544U 98067A   15011.75047383  .00015267  00000-0  24546-3 0  7134";
-			string str3 = "2 25544 051.6471 144.9217 0006128 239.4164 268.3488 15.53189343923690";
+			var timer2 = new Timer();
+			timer2.Tick += (s, e) =>
+			{
+				Update();
+			};
+			timer2.Interval = 1000 * 60 * 5;
+			timer2.Start();
+			Update();
+		}
 
-			Tle tle0 = new Tle(str1, str2, str3);
-			Satellite sat = new Satellite(tle0);
-			SatPos = sat.PositionEci(0);
+		private void Update()
+		{
+			lock (Sats)
+			{
+				SpaceTrack.SpaceTrack st = new SpaceTrack.SpaceTrack("stratarozumu@gmail.com", "StrataRozumu-e47c8");
+				String[] data = st.GetSpaceTrack(new string[] { "25544" }, DateTime.Now.Subtract(new TimeSpan(14, 0, 0, 0)), DateTime.Now).Split('\n');
+				Sats.Clear();
+				for (Int32 i = 0; i < data.Length - 1; i += 3)
+				{
+					Tle tle0 = new Tle(data[i], data[i + 1], data[i + 2]);
+					Satellite sat = new Satellite(tle0);
+					Sats.Add(sat);
+					SatPos.Add(sat.PositionEci(0));
+				}
+			}
 		}
 
 		private void Form1_Load(object sender, EventArgs e)
@@ -119,61 +141,98 @@ namespace SatTracker
 			Gl.glClear(Gl.GL_COLOR_BUFFER_BIT | Gl.GL_DEPTH_BUFFER_BIT);
 			Gl.glClearColor(0, 0, 0, 1);
 			Gl.glLoadIdentity();
-			Gl.glColor3i(255, 0, 0);
-
 
 			this.Text = cam.Radius.ToString("#0.00");
 			cam.Look(); // Обновляем взгляд камеры
-
+						
 			float[] light_diffuse = new float[] { 1.0f, 1.0f, 1.0f };
 			float[] light_position = new float[] { 100000.0f, 0.0f, 0.0f, 0.0f };
 			Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_AMBIENT_AND_DIFFUSE, light_diffuse);
 			Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_POSITION, light_position);
-
+			
 			Gl.glPushMatrix();
 			
 			Gl.glEnable(Gl.GL_LIGHT0);
 
 			DrawEarth();
 
-			Gl.glPopMatrix();			
-
 			var w = cam.Radius / 500;
-			DrawAxis(cam.Radius*2, w);
-		    DrawItem(w*2);
+			DrawAxis(cam.Radius * 2, 1);
+			//DrawItems(w*2);
+			DrawItem(10);
+			DrawOrbit(2, 128);
 
-
+			Gl.glPopMatrix();
+			
 			Gl.glDisable(Gl.GL_LIGHT0);
 			Gl.glFlush();
 
 			anT.Invalidate();
 		}
 
-	    private void DrawItems(double w)
-	    {
-            float[] MatrixColor = new float[] { 1.0f, 1.0f, 1.0f, 1.0f };
-            Gl.glMaterialfv(Gl.GL_FRONT_AND_BACK, Gl.GL_AMBIENT_AND_DIFFUSE, MatrixColor);
-	        for (double j = -Math.PI; j < Math.PI; j += Math.PI / 64)
-	        {
-	            for (double i = -Math.PI; i < Math.PI; i += Math.PI/64)
-	            {
-	                float R = 10000.0f;
-	                Gl.glPushMatrix();
-	                Gl.glTranslated(Math.Sin(i) * Math.Cos(j) * R, Math.Cos(i) * Math.Cos(j) * R, Math.Sin(j)* R);
-	                Glut.glutSolidSphere(w, 5, 5);
-	                Gl.glPopMatrix();
-	            }
-	        }
-	        Glut.glutSolidSphere(w, 5, 5);
-        }
+		//private void DrawItems(double w)
+		//{
+		//	float[] MatrixColor = new float[] { 1.0f, 1.0f, 1.0f, 1.0f };
+		//	Gl.glMaterialfv(Gl.GL_FRONT_AND_BACK, Gl.GL_AMBIENT_AND_DIFFUSE, MatrixColor);
+		//	for (double j = -Math.PI; j < Math.PI; j += Math.PI / 64)
+		//	{
+		//		for (double i = -Math.PI; i < Math.PI; i += Math.PI/64)
+		//		{
+		//			float R = 10000.0f;
+		//			Gl.glPushMatrix();
+		//			Gl.glTranslated(Math.Sin(i) * Math.Cos(j) * R, Math.Cos(i) * Math.Cos(j) * R, Math.Sin(j)* R);
+		//			Glut.glutSolidSphere(w, 5, 5);
+		//			Gl.glPopMatrix();
+		//		}
+		//	}
+		//	Glut.glutSolidSphere(w, 5, 5);
+		//}
 
-		private void DrawItem(double w)
+		private void DrawItems(double w)
 		{
 			float[] MatrixColor = new float[] { 1.0f, 1.0f, 1.0f, 1.0f };
 			Gl.glMaterialfv(Gl.GL_FRONT_AND_BACK, Gl.GL_AMBIENT_AND_DIFFUSE, MatrixColor);
+			foreach (var Sat in SatPos)
+			{
+				Gl.glPushMatrix();
+				Gl.glTranslated(Sat.Position.X, Sat.Position.Z, Sat.Position.Y);
+				
+				Gl.glPopMatrix();
+			}
+		}
+
+		private void DrawOrbit(float w, int p)
+		{
+			var Sat = Sats.FirstOrDefault();
+			if (Sat == null)
+				return;
 			Gl.glPushMatrix();
-			Gl.glTranslated(SatPos.Position.X, SatPos.Position.Z, SatPos.Position.Y);
-			Glut.glutSolidSphere(w, 5, 5);
+			Gl.glLineWidth(w);
+			Gl.glBegin(Gl.GL_LINE_LOOP);
+			for (Int32 i = 0; i < p; i++)
+			{
+				var Pos = Sat.PositionEci(DateTime.UtcNow.Add(new TimeSpan(0,0,(int) (Sat.Orbit.Period.TotalSeconds * i / p))));
+				Gl.glColor3f(1.0f, 1.0f, 1.0f);
+				Gl.glVertex3d(Pos.Position.X, Pos.Position.Z, Pos.Position.Y);
+			}
+			Gl.glEnd();
+
+			Gl.glPopMatrix();
+		}
+
+		private void DrawItem(float w)
+		{
+			var Sat = Sats.FirstOrDefault();
+			if (Sat == null)
+				return;
+			var Pos = Sat.PositionEci(CurrentTimeStamp);
+			Gl.glPushMatrix();
+			Gl.glPointSize(w);
+			Gl.glEnable(Gl.GL_POINT_SMOOTH);
+			Gl.glBegin(Gl.GL_POINTS);
+			Gl.glColor3f(1.0f, 1.0f, 1.0f);
+			Gl.glVertex3d(Pos.Position.X, Pos.Position.Z, Pos.Position.Y);
+			Gl.glEnd();
 			Gl.glPopMatrix();
 		}
 
@@ -202,30 +261,25 @@ namespace SatTracker
 
 		private void DrawAxis(float x, float width)
 		{
-			float[] MatrixColorOX = new float[] { 1, 0, 0, 1 };
-			float[] MatrixColorOZ = new float[] { 0, 1, 0, 1 };
-			float[] MatrixColorOY = new float[] { 0, 0, 1, 1 };
-			float[] MatrixOXOYColor = new float[] { 1, 1, 1, 0.5f };
-			// x - количество или длина сетки, quad_size - размер клетки
-			Gl.glPushMatrix(); // Рисуем оси координат, цвет объявлен в самом начале
-			Gl.glMaterialfv(Gl.GL_FRONT, Gl.GL_AMBIENT_AND_DIFFUSE, MatrixColorOX);
-			Gl.glTranslated((-x * 2) / 2, 0, 0);
-			Gl.glRotated(90, 0, 1, 0);
-			Glut.glutSolidCylinder(width, x * 2, 12, 12);
-			Gl.glPopMatrix();
+			Gl.glLineWidth(width);
+			Gl.glBegin(Gl.GL_LINES);
 
-			Gl.glPushMatrix();
-			Gl.glMaterialfv(Gl.GL_FRONT, Gl.GL_AMBIENT_AND_DIFFUSE, MatrixColorOZ);
-			Gl.glTranslated(0, 0, (-x * 2) / 2);
-			Glut.glutSolidCylinder(width, x * 2, 12, 12);
-			Gl.glPopMatrix();
+			Gl.glColor3f(1.0f, 0.0f, 0.0f);
+			Gl.glVertex3f(-x, 0, 0);
+			Gl.glColor3f(1.0f, 0.0f, 0.0f);
+			Gl.glVertex3f(x, 0, 0);
 
-			Gl.glPushMatrix();
-			Gl.glMaterialfv(Gl.GL_FRONT, Gl.GL_AMBIENT_AND_DIFFUSE, MatrixColorOY);
-			Gl.glTranslated(0, x / 2, 0);
-			Gl.glRotated(90, 1, 0, 0);
-			Glut.glutSolidCylinder(width, x, 12, 12);
-			Gl.glPopMatrix();
+			Gl.glColor3f(0.0f, 1.0f, 0.0f);
+			Gl.glVertex3f(0, -x, 0);
+			Gl.glColor3f(0.0f, 1.0f, 0.0f);
+			Gl.glVertex3f(0, x, 0);
+
+			Gl.glColor3f(0.0f, 0.0f, 1.0f);
+			Gl.glVertex3f(0, 0, -x);
+			Gl.glColor3f(0.0f, 0.0f, 1.0f);
+			Gl.glVertex3f(0, 0, x);
+			Gl.glEnd();
+			
 		}
 
 		private float GetYearAngle(DateTime CurrentDatetime)

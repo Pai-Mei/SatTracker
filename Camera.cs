@@ -56,21 +56,29 @@ namespace SatTracker
 
 		public static Vector3D operator +(Vector3D a, Vector3D b)
 		{
+			if((a == null) || (b == null))
+				throw new ArgumentNullException();
 			return new Vector3D(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
 		}
 
 		public static Vector3D operator -(Vector3D a, Vector3D b)
 		{
+			if((a == null) || (b == null))
+				throw new ArgumentNullException();
 			return new Vector3D(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
 		}
 
 		public static Vector3D operator -(Vector3D a)
 		{
+			if((a == null))
+				throw new ArgumentNullException();
 			return new Vector3D(-a.X, -a.Y, -a.Z);
 		}
 
 		public static Vector3D operator *(Vector3D a, float scalar)
 		{
+			if((a == null))
+				throw new ArgumentNullException();
 			return new Vector3D(a.X*scalar, a.Y*scalar, a.Z*scalar);
 		}
 	}
