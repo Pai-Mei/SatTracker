@@ -107,19 +107,21 @@ namespace SatTracker
 			var timer2 = new Timer();
 			timer2.Tick += (s, e) =>
 			{
-				Update();
+				UpdateTracks();
 			};
 			timer2.Interval = 1000 * 60 * 5;
 			timer2.Start();
-			Update();
+			UpdateTracks();
 		}
 
-		private void Update()
+		private void UpdateTracks()
 		{
 			lock (Sats)
 			{
+				
 				SpaceTrack.SpaceTrack st = new SpaceTrack.SpaceTrack("stratarozumu@gmail.com", "StrataRozumu-e47c8");
-				String[] data = st.GetSpaceTrack(new string[] { "25544" }, DateTime.Now.Subtract(new TimeSpan(14, 0, 0, 0)), DateTime.Now).Split('\n');
+				String[] data = st.GetSpaceTrack(new string[] { "25544" }).Split('\n');
+				var orbit = st.GetOrbitData(new string[] { "25544" });
 				Sats.Clear();
 				for (Int32 i = 0; i < data.Length - 1; i += 3)
 				{
@@ -138,36 +140,40 @@ namespace SatTracker
 
 		private void Draw()
 		{
-			Gl.glClear(Gl.GL_COLOR_BUFFER_BIT | Gl.GL_DEPTH_BUFFER_BIT);
-			Gl.glClearColor(0, 0, 0, 1);
-			Gl.glLoadIdentity();
+			try
+			{
+				Gl.glClear(Gl.GL_COLOR_BUFFER_BIT | Gl.GL_DEPTH_BUFFER_BIT);
+				Gl.glClearColor(0, 0, 0, 1);
+				Gl.glLoadIdentity();
 
-			this.Text = cam.Radius.ToString("#0.00");
-			cam.Look(); // Обновляем взгляд камеры
-						
-			float[] light_diffuse = new float[] { 1.0f, 1.0f, 1.0f };
-			float[] light_position = new float[] { 100000.0f, 0.0f, 0.0f, 0.0f };
-			Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_AMBIENT_AND_DIFFUSE, light_diffuse);
-			Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_POSITION, light_position);
-			
-			Gl.glPushMatrix();
-			
-			Gl.glEnable(Gl.GL_LIGHT0);
+				this.Text = cam.Radius.ToString("#0.00");
+				cam.Look(); // Обновляем взгляд камеры
 
-			DrawEarth();
+				float[] light_diffuse = new float[] { 1.0f, 1.0f, 1.0f };
+				float[] light_position = new float[] { 100000.0f, 0.0f, 0.0f, 0.0f };
+				Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_AMBIENT_AND_DIFFUSE, light_diffuse);
+				Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_POSITION, light_position);
 
-			var w = cam.Radius / 500;
-			DrawAxis(cam.Radius * 2, 1);
-			//DrawItems(w*2);
-			DrawItem(10);
-			DrawOrbit(2, 128);
+				Gl.glPushMatrix();
 
-			Gl.glPopMatrix();
-			
-			Gl.glDisable(Gl.GL_LIGHT0);
-			Gl.glFlush();
+				Gl.glEnable(Gl.GL_LIGHT0);
 
-			anT.Invalidate();
+				DrawEarth();
+
+				var w = cam.Radius / 500;
+				DrawAxis(cam.Radius * 2, 1);
+				//DrawItems(w*2);
+				DrawItem(10);
+				DrawOrbit(2, 128);
+
+				Gl.glPopMatrix();
+
+				Gl.glDisable(Gl.GL_LIGHT0);
+				Gl.glFlush();
+
+				anT.Invalidate();
+			}
+			catch { }
 		}
 
 		//private void DrawItems(double w)

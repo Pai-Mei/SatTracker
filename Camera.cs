@@ -107,11 +107,14 @@ namespace SatTracker
 
 		public override void Look()
 		{
-			
-			base.View = GetViewVector();
-			base.Up = GetUpVector();
-			base.Position = Center - View*Radius;
-			base.Look();
+			try
+			{
+				base.View = GetViewVector();
+				base.Up = GetUpVector();
+				base.Position = Center - View * Radius;
+				base.Look();
+			}
+			catch { }
 		}
 
 		private Vector3D GetUpVector()

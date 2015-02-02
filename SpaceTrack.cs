@@ -5,11 +5,19 @@ using System.Text;
 using System.Net;
 using System.IO;
 using System.Collections.Specialized;
+using Zeptomoby.OrbitTools;
 
 namespace SpaceTrack
 {
 	public class SpaceTrack
 	{
+		class NoAuthException : Exception
+		{ }
+
+		string uriBase = "https://www.space-track.org";
+		string requestController = "/basicspacedata";
+		string requestAction = "/query";
+
 		public String UserName { get; set; }
 		public String Password { get; set; }
 
@@ -37,36 +45,118 @@ namespace SpaceTrack
 			}
 		}   // END WebClient Class
 
-		// Get the TLEs based of an array of NORAD CAT IDs, start date, and end date
+		private Boolean Auth(WebClient client)
+		{
+			// Store the user authentication information
+			var data = new NameValueCollection
+                {
+                    { "identity", UserName },
+                    { "password", Password },
+                };
+
+			// Generate the URL for the API Query and return the response
+			var response2 = client.UploadValues(uriBase + "/auth/login", data); 
+			//if (response2.Count() > 0)
+				return true;
+			//else
+			//	return false;
+		}
+
+		public Boolean Authentication()
+		{
+			using (var client = new WebClientEx())
+			{
+				return Auth(client);
+			}
+		}
+
+		public List<Satellite> GetSatellites(string LanuchYaer)
+		{
+			
+			string predicateValues = "/class/satcat/LAUNCH_YEAR/=" + LanuchYaer + "/orderby/INTLDES asc/metadata/false";
+			string request = uriBase + requestController + requestAction + predicateValues;
+
+			// Create new WebClient object to communicate with the service
+			using (var client = new WebClientEx())
+			{
+				if (Auth(client))
+				{
+					var response4 = client.DownloadData(request);
+					var stringData = (System.Text.Encoding.Default.GetString(response4)).Split('\n');
+					List<Satellite> result = new List<Satellite>();
+					for (Int32 i = 0; i < stringData.Length - 1; i += 3)
+					{
+						Tle tle = new Tle(stringData[i], stringData[i + 1], stringData[i + 2]);
+						Satellite sat = new Satellite(tle);
+						result.Add(sat);
+					}
+					return result;
+				}
+				else
+				{
+					throw new NoAuthException();
+				}
+			}
+		}
+
+		public string GetSpaceTrack(string[] norad)
+		{
+			string predicateValues = "/class/tle_latest/ORDINAL/1/NORAD_CAT_ID/" + string.Join(",", norad) + "/orderby/NORAD_CAT_ID%20ASC/format/3le";
+			string request = uriBase + requestController + requestAction + predicateValues;
+
+			using (var client = new WebClientEx())
+			{
+				if (Auth(client))
+				{
+					var response4 = client.DownloadData(request);
+
+					return (System.Text.Encoding.Default.GetString(response4));
+				}
+				else
+				{
+					throw new NoAuthException();
+				}
+			}
+		}
+				
 		public string GetSpaceTrack(string[] norad, DateTime dtstart, DateTime dtend)
 		{
-			string uriBase = "https://www.space-track.org";
-			string requestController = "/basicspacedata";
-			string requestAction = "/query";
-			// URL to retrieve all the latest tle's for the provided NORAD CAT 
-			// IDs for the provided Dates
-			//string predicateValues   = "/class/tle_latest/ORDINAL/1/NORAD_CAT_ID/" + string.Join(",", norad) + "/orderby/NORAD_CAT_ID%20ASC/format/tle";
-			// URL to retrieve all the latest 3le's for the provided NORAD CAT 
-			// IDs for the provided Dates
 			string predicateValues = "/class/tle/EPOCH/" + dtstart.ToString("yyyy-MM-dd--") + dtend.ToString("yyyy-MM-dd") + "/NORAD_CAT_ID/" + string.Join(",", norad) + "/orderby/NORAD_CAT_ID%20ASC/format/3le";
 			string request = uriBase + requestController + requestAction + predicateValues;
 
 			// Create new WebClient object to communicate with the service
 			using (var client = new WebClientEx())
 			{
-				// Store the user authentication information
-				var data = new NameValueCollection
-                {
-                    { "identity", UserName },
-                    { "password", Password },
-                };
-
-				// Generate the URL for the API Query and return the response
-				var response2 = client.UploadValues(uriBase + "/auth/login", data);
-				var response4 = client.DownloadData(request);
-
-				return (System.Text.Encoding.Default.GetString(response4));
+				if (Auth(client))
+				{
+					var response4 = client.DownloadData(request);
+					return (System.Text.Encoding.Default.GetString(response4));
+				}
+				else
+				{
+					throw new NoAuthException();
+				}
 			}
-		}   // END GetSpaceTrack()
-	}   // END SpaceTrack Class
-}   // END namespace GetTLEData
+		}
+
+		public string GetOrbitData(string[] norad)
+		{
+			string predicateValues = "/class/omm/NORAD_CAT_ID/" + string.Join(",", norad) + "/orderby/NORAD_CAT_ID%20ASC/limit/1/metadata/false";
+			string request = uriBase + requestController + requestAction + predicateValues;
+
+			using (var client = new WebClientEx())
+			{
+				if (Auth(client))
+				{
+					var response4 = client.DownloadData(request);
+					var str = System.Text.Encoding.Default.GetString(response4);
+					return str;
+				}
+				else
+				{
+					throw new NoAuthException();
+				}
+			}
+		}
+	} 
+}
