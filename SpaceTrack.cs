@@ -70,10 +70,41 @@ namespace SpaceTrack
 			}
 		}
 
+		public List<Satellite> GetSatellites()
+		{
+			string predicateValues = "/class/tle_latest/orderby/NORAD_CAT_ID desc/format/3le/limit/10/metadata/false";
+			string request = uriBase + requestController + requestAction + predicateValues;
+			using (var client = new WebClientEx())
+			{
+					
+				if (Auth(client))
+				{
+					var response4 = client.DownloadData(request);
+					var stringData = System.Text.Encoding.Default.GetString(response4).Split('\n');
+					var sats = new List<Satellite>();
+					for (Int32 i = 0; i < stringData.Length - 1; i++)
+					{
+						try
+						{
+							Tle tle = new Tle(stringData[i], stringData[i + 1], stringData[i + 2]);
+							Satellite sat = new Satellite(tle);
+							sats.Add(sat);
+						}
+						catch {	}
+					}
+					return (sats);
+				}
+				else
+				{
+					throw new NoAuthException();
+				}
+			}
+		}
+
 		public List<Satellite> GetSatellites(string LanuchYaer)
 		{
-			
-			string predicateValues = "/class/satcat/LAUNCH_YEAR/=" + LanuchYaer + "/orderby/INTLDES asc/metadata/false";
+
+			string predicateValues = "/class/tle_latest/LAUNCH_YEAR/=" + LanuchYaer + "/orderby/INTLDES asc/metadata/false";
 			string request = uriBase + requestController + requestAction + predicateValues;
 
 			// Create new WebClient object to communicate with the service
@@ -139,9 +170,9 @@ namespace SpaceTrack
 			}
 		}
 
-		public string GetOrbitData(string[] norad)
+		public List<Satellite> GetOrbitData(string[] norad)
 		{
-			string predicateValues = "/class/omm/NORAD_CAT_ID/" + string.Join(",", norad) + "/orderby/NORAD_CAT_ID%20ASC/limit/1/metadata/false";
+			string predicateValues = "/class/omm/NORAD_CAT_ID/" + norad + "/orderby/NORAD_CAT_ID%20ASC/limit/1";
 			string request = uriBase + requestController + requestAction + predicateValues;
 
 			using (var client = new WebClientEx())
@@ -149,8 +180,12 @@ namespace SpaceTrack
 				if (Auth(client))
 				{
 					var response4 = client.DownloadData(request);
-					var str = System.Text.Encoding.Default.GetString(response4);
-					return str;
+					var str = System.Text.Encoding.Default.GetString(response4).Split('\n');
+					for (Int32 i = str.Length - 4; i < str.Length - 1; i++)
+					{
+						
+					}
+					return null;
 				}
 				else
 				{

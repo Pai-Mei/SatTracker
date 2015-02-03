@@ -120,16 +120,17 @@ namespace SatTracker
 			{
 				
 				SpaceTrack.SpaceTrack st = new SpaceTrack.SpaceTrack("stratarozumu@gmail.com", "StrataRozumu-e47c8");
-				String[] data = st.GetSpaceTrack(new string[] { "25544" }).Split('\n');
-				var orbit = st.GetOrbitData(new string[] { "25544" });
 				Sats.Clear();
-				for (Int32 i = 0; i < data.Length - 1; i += 3)
-				{
-					Tle tle0 = new Tle(data[i], data[i + 1], data[i + 2]);
-					Satellite sat = new Satellite(tle0);
-					Sats.Add(sat);
-					SatPos.Add(sat.PositionEci(0));
-				}
+				Sats = st.GetSatellites();
+				//String[] data = st.GetSpaceTrack(new string[] { "25544" }).Split('\n');
+				//Sats.Clear();
+				//for (Int32 i = 0; i < data.Length - 1; i += 3)
+				//{
+				//	Tle tle0 = new Tle(data[i], data[i + 1], data[i + 2]);
+				//	Satellite sat = new Satellite(tle0);
+				//	Sats.Add(sat);
+				//	SatPos.Add(sat.PositionEci(0));
+				//}
 			}
 		}
 
@@ -163,7 +164,7 @@ namespace SatTracker
 				var w = cam.Radius / 500;
 				DrawAxis(cam.Radius * 2, 1);
 				//DrawItems(w*2);
-				DrawItem(10);
+				DrawItems(10);
 				DrawOrbit(2, 128);
 
 				Gl.glPopMatrix();
@@ -209,37 +210,40 @@ namespace SatTracker
 
 		private void DrawOrbit(float w, int p)
 		{
-			var Sat = Sats.FirstOrDefault();
-			if (Sat == null)
-				return;
-			Gl.glPushMatrix();
-			Gl.glLineWidth(w);
-			Gl.glBegin(Gl.GL_LINE_LOOP);
-			for (Int32 i = 0; i < p; i++)
+			foreach (var Sat in Sats)
 			{
-				var Pos = Sat.PositionEci(DateTime.UtcNow.Add(new TimeSpan(0,0,(int) (Sat.Orbit.Period.TotalSeconds * i / p))));
-				Gl.glColor3f(1.0f, 1.0f, 1.0f);
-				Gl.glVertex3d(Pos.Position.X, Pos.Position.Z, Pos.Position.Y);
+				if (Sat == null)
+					return;
+				Gl.glPushMatrix();
+				Gl.glLineWidth(w);
+				Gl.glBegin(Gl.GL_LINE_LOOP);
+				for (Int32 i = 0; i < p; i++)
+				{
+					var Pos = Sat.PositionEci(DateTime.UtcNow.Add(new TimeSpan(0, 0, (int)(Sat.Orbit.Period.TotalSeconds * i / p))));
+					Gl.glColor3f(1.0f, 1.0f, 1.0f);
+					Gl.glVertex3d(Pos.Position.X, Pos.Position.Z, Pos.Position.Y);
+				}
+				Gl.glEnd();
+				Gl.glPopMatrix();
 			}
-			Gl.glEnd();
-
-			Gl.glPopMatrix();
 		}
 
-		private void DrawItem(float w)
+		private void DrawItems(float w)
 		{
-			var Sat = Sats.FirstOrDefault();
-			if (Sat == null)
-				return;
-			var Pos = Sat.PositionEci(CurrentTimeStamp);
-			Gl.glPushMatrix();
-			Gl.glPointSize(w);
-			Gl.glEnable(Gl.GL_POINT_SMOOTH);
-			Gl.glBegin(Gl.GL_POINTS);
-			Gl.glColor3f(1.0f, 1.0f, 1.0f);
-			Gl.glVertex3d(Pos.Position.X, Pos.Position.Z, Pos.Position.Y);
-			Gl.glEnd();
-			Gl.glPopMatrix();
+			foreach (var Sat in Sats)
+			{
+				if (Sat == null)
+					return;
+				var Pos = Sat.PositionEci(CurrentTimeStamp);
+				Gl.glPushMatrix();
+				Gl.glPointSize(w);
+				Gl.glEnable(Gl.GL_POINT_SMOOTH);
+				Gl.glBegin(Gl.GL_POINTS);
+				Gl.glColor3f(1.0f, 1.0f, 1.0f);
+				Gl.glVertex3d(Pos.Position.X, Pos.Position.Z, Pos.Position.Y);
+				Gl.glEnd();
+				Gl.glPopMatrix();
+			}
 		}
 
         private void DrawGrid(int x, float quad_size)
