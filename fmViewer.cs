@@ -58,11 +58,11 @@ namespace SatTracker
 
 			
 			Gl.glEnable(Gl.GL_DEPTH_TEST);
-			Gl.glEnable(Gl.GL_LIGHTING);
-			Gl.glEnable(Gl.GL_LIGHT0);
 			Gl.glEnable(Gl.GL_NORMALIZE);
 			Gl.glEnable(Gl.GL_DEPTH_TEST);
-			Gl.glLightModelf(Gl.GL_LIGHT_MODEL_TWO_SIDE, Gl.GL_TRUE);
+
+			Gl.glLightModelf(Gl.GL_LIGHT_MODEL_TWO_SIDE, Gl.GL_FALSE);
+			Gl.glLightModelf(Gl.GL_LIGHT_MODEL_LOCAL_VIEWER, Gl.GL_TRUE);
 
 			Gl.glBlendFunc(Gl.GL_SRC_ALPHA, Gl.GL_ONE_MINUS_SRC_ALPHA);
 			Gl.glHint(Gl.GL_LINE_SMOOTH_HINT, Gl.GL_NICEST);
@@ -77,9 +77,6 @@ namespace SatTracker
 			cam.HAngle = 0;
 			cam.VAngle = 0;
 			cam.Center = new Vector3D(0, 0, 0);
-			//Position_Camera(0, 6, -15, 0, 3, 0, 0, 1, 0); // Вот тут в инициализации
-			// укажем начальную позицию камеры, взгляда и вертикального вектора.
-
 			img = Image.FromFile("EarthMap.jpg");
 			bitmapdata = new System.Drawing.Imaging.BitmapData();
 			image = new Bitmap(img, img.Width, img.Height);
@@ -121,7 +118,8 @@ namespace SatTracker
 				
 				SpaceTrack.SpaceTrack st = new SpaceTrack.SpaceTrack("stratarozumu@gmail.com", "StrataRozumu-e47c8");
 				Sats.Clear();
-				Sats = st.GetSatellites();
+				//Sats = st.GetSatellites();
+				Sats = st.GetSatellites(new string[] { "25544" });
 				//String[] data = st.GetSpaceTrack(new string[] { "25544" }).Split('\n');
 				//Sats.Clear();
 				//for (Int32 i = 0; i < data.Length - 1; i += 3)
@@ -150,26 +148,22 @@ namespace SatTracker
 				this.Text = cam.Radius.ToString("#0.00");
 				cam.Look(); // Обновляем взгляд камеры
 
+
+
 				float[] light_diffuse = new float[] { 1.0f, 1.0f, 1.0f };
 				float[] light_position = new float[] { 100000.0f, 0.0f, 0.0f, 0.0f };
 				Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_AMBIENT_AND_DIFFUSE, light_diffuse);
 				Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_POSITION, light_position);
-
 				Gl.glPushMatrix();
-
+				Gl.glEnable(Gl.GL_LIGHTING);
 				Gl.glEnable(Gl.GL_LIGHT0);
-
 				DrawEarth();
-
-				var w = cam.Radius / 500;
+				Gl.glDisable(Gl.GL_LIGHT0);
+				Gl.glDisable(Gl.GL_LIGHTING);
 				DrawAxis(cam.Radius * 2, 1);
-				//DrawItems(w*2);
 				DrawItems(10);
 				DrawOrbit(2, 128);
-
 				Gl.glPopMatrix();
-
-				Gl.glDisable(Gl.GL_LIGHT0);
 				Gl.glFlush();
 
 				anT.Invalidate();
@@ -195,26 +189,14 @@ namespace SatTracker
 		//	Glut.glutSolidSphere(w, 5, 5);
 		//}
 
-		private void DrawItems(double w)
-		{
-			float[] MatrixColor = new float[] { 1.0f, 1.0f, 1.0f, 1.0f };
-			Gl.glMaterialfv(Gl.GL_FRONT_AND_BACK, Gl.GL_AMBIENT_AND_DIFFUSE, MatrixColor);
-			foreach (var Sat in SatPos)
-			{
-				Gl.glPushMatrix();
-				Gl.glTranslated(Sat.Position.X, Sat.Position.Z, Sat.Position.Y);
-				
-				Gl.glPopMatrix();
-			}
-		}
-
 		private void DrawOrbit(float w, int p)
 		{
+			if (Sats == null)
+				return;
 			foreach (var Sat in Sats)
 			{
 				if (Sat == null)
 					return;
-				Gl.glPushMatrix();
 				Gl.glLineWidth(w);
 				Gl.glBegin(Gl.GL_LINE_LOOP);
 				for (Int32 i = 0; i < p; i++)
@@ -224,25 +206,24 @@ namespace SatTracker
 					Gl.glVertex3d(Pos.Position.X, Pos.Position.Z, Pos.Position.Y);
 				}
 				Gl.glEnd();
-				Gl.glPopMatrix();
 			}
 		}
 
 		private void DrawItems(float w)
 		{
+			if (Sats == null)
+				return;
 			foreach (var Sat in Sats)
 			{
 				if (Sat == null)
 					return;
 				var Pos = Sat.PositionEci(CurrentTimeStamp);
-				Gl.glPushMatrix();
 				Gl.glPointSize(w);
 				Gl.glEnable(Gl.GL_POINT_SMOOTH);
 				Gl.glBegin(Gl.GL_POINTS);
 				Gl.glColor3f(1.0f, 1.0f, 1.0f);
 				Gl.glVertex3d(Pos.Position.X, Pos.Position.Z, Pos.Position.Y);
 				Gl.glEnd();
-				Gl.glPopMatrix();
 			}
 		}
 

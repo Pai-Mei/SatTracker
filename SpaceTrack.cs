@@ -130,6 +130,35 @@ namespace SpaceTrack
 			}
 		}
 
+		public List<Satellite> GetSatellites(string[] Norad)
+		{
+
+			string predicateValues = "/class/tle_latest/ORDINAL/1/NORAD_CAT_ID/" + string.Join(",", Norad) + "/orderby/NORAD_CAT_ID%20ASC/format/3le";
+			string request = uriBase + requestController + requestAction + predicateValues;
+
+			// Create new WebClient object to communicate with the service
+			using (var client = new WebClientEx())
+			{
+				if (Auth(client))
+				{
+					var response4 = client.DownloadData(request);
+					var stringData = (System.Text.Encoding.Default.GetString(response4)).Split('\n');
+					List<Satellite> result = new List<Satellite>();
+					for (Int32 i = 0; i < stringData.Length - 1; i += 3)
+					{
+						Tle tle = new Tle(stringData[i], stringData[i + 1], stringData[i + 2]);
+						Satellite sat = new Satellite(tle);
+						result.Add(sat);
+					}
+					return result;
+				}
+				else
+				{
+					throw new NoAuthException();
+				}
+			}
+		}
+		
 		public string GetSpaceTrack(string[] norad)
 		{
 			string predicateValues = "/class/tle_latest/ORDINAL/1/NORAD_CAT_ID/" + string.Join(",", norad) + "/orderby/NORAD_CAT_ID%20ASC/format/3le";
@@ -140,7 +169,6 @@ namespace SpaceTrack
 				if (Auth(client))
 				{
 					var response4 = client.DownloadData(request);
-
 					return (System.Text.Encoding.Default.GetString(response4));
 				}
 				else
