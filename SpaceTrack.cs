@@ -21,10 +21,30 @@ namespace SpaceTrack
 		public String UserName { get; set; }
 		public String Password { get; set; }
 
+		public List<Satellite> AllSats { get; set; }
+
 		public SpaceTrack(String UserName, String Password)
 		{
+			var CurDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 			this.UserName = UserName;
 			this.Password = Password;
+			if (!File.Exists(CurDir + "/satdata.dat"))
+			{
+				AllSats = GetSatellites();
+			} else {
+				using (var sr = new StreamReader(CurDir + "/satdata.dat"))
+				{
+					while (!sr.EndOfStream)
+					{
+						var str1 = sr.ReadLine();
+						var str2 = sr.ReadLine();
+						var str3 = sr.ReadLine();
+						Tle tle = new Tle(str1, str2, str3);
+						Satellite sat = new Satellite(tle);
+						AllSats.Add(sat);
+					}
+				}
+			}
 		}
 
 		public class WebClientEx : WebClient
@@ -70,9 +90,10 @@ namespace SpaceTrack
 			}
 		}
 
-		public List<Satellite> GetSatellites()
+		private List<Satellite> GetSatellites()
 		{
-			string predicateValues = "/class/tle_latest/orderby/NORAD_CAT_ID desc/format/3le/limit/10/metadata/false";
+			var CurDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+			string predicateValues = "/class/tle_latest/ORDINAL/1/EPOCH/%3Enow-30/orderby/NORAD_CAT_ID%20desc/format/3le";
 			string request = uriBase + requestController + requestAction + predicateValues;
 			using (var client = new WebClientEx())
 			{
@@ -82,16 +103,21 @@ namespace SpaceTrack
 					var response4 = client.DownloadData(request);
 					var stringData = System.Text.Encoding.Default.GetString(response4).Split('\n');
 					var sats = new List<Satellite>();
-					for (Int32 i = 0; i < stringData.Length - 1; i++)
+					using (var sw = new StreamWriter(CurDir + "/satdata.dat"))
 					{
-						try
-						{
-							Tle tle = new Tle(stringData[i], stringData[i + 1], stringData[i + 2]);
-							Satellite sat = new Satellite(tle);
-							sats.Add(sat);
-						}
-						catch {	}
+						sw.Write(response4);
 					}
+						for (Int32 i = 0; i < stringData.Length - 1; i++)
+						{
+							
+							try
+							{
+								Tle tle = new Tle(stringData[i], stringData[i + 1], stringData[i + 2]);
+								Satellite sat = new Satellite(tle);
+								sats.Add(sat);
+							}
+							catch { }
+						}
 					return (sats);
 				}
 				else

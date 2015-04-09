@@ -20,8 +20,6 @@ namespace SatTracker
 		{
 			get { return DateTime.UtcNow.Add(TimeShift); } //new DateTime(DateTime.Now.Year, 6, 21);
 		}
-		public List<Eci> SatPos = new List<Eci>();
-		public List<Satellite> Sats = new List<Satellite>();
 
 		float DayAngle = 0;
 		float YearAngle = 0;
@@ -100,38 +98,9 @@ namespace SatTracker
 				Draw();
 			};
 			timer.Start();
-
-			var timer2 = new Timer();
-			timer2.Tick += (s, e) =>
-			{
-				UpdateTracks();
-			};
-			timer2.Interval = 1000 * 60 * 5;
-			timer2.Start();
-			UpdateTracks();
+			
 		}
-
-		private void UpdateTracks()
-		{
-			lock (Sats)
-			{
-				
-				SpaceTrack.SpaceTrack st = new SpaceTrack.SpaceTrack("stratarozumu@gmail.com", "StrataRozumu-e47c8");
-				Sats.Clear();
-				//Sats = st.GetSatellites();
-				Sats = st.GetSatellites(new string[] { "25544" });
-				//String[] data = st.GetSpaceTrack(new string[] { "25544" }).Split('\n');
-				//Sats.Clear();
-				//for (Int32 i = 0; i < data.Length - 1; i += 3)
-				//{
-				//	Tle tle0 = new Tle(data[i], data[i + 1], data[i + 2]);
-				//	Satellite sat = new Satellite(tle0);
-				//	Sats.Add(sat);
-				//	SatPos.Add(sat.PositionEci(0));
-				//}
-			}
-		}
-
+		
 		private void Form1_Load(object sender, EventArgs e)
 		{
 			InitGL();
@@ -191,9 +160,9 @@ namespace SatTracker
 
 		private void DrawOrbit(float w, int p)
 		{
-			if (Sats == null)
+			if ((this.MdiParent as fmMain).Sats == null)
 				return;
-			foreach (var Sat in Sats)
+			foreach (var Sat in (this.MdiParent as fmMain).Sats)
 			{
 				if (Sat == null)
 					return;
@@ -211,9 +180,9 @@ namespace SatTracker
 
 		private void DrawItems(float w)
 		{
-			if (Sats == null)
+			if ((this.MdiParent as fmMain).Sats == null)
 				return;
-			foreach (var Sat in Sats)
+			foreach (var Sat in (this.MdiParent as fmMain).Sats)
 			{
 				if (Sat == null)
 					return;
