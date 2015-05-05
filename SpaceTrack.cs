@@ -48,6 +48,8 @@ namespace SpaceTrack
 		class NoAuthException : Exception
 		{ }
 
+		const int c_maxNumber = 2000;
+
 		string uriBase = "https://www.space-track.org";
 		string requestController = "/basicspacedata";
 		string requestAction = "/query";
@@ -61,12 +63,12 @@ namespace SpaceTrack
 
 		private void SaveSats(List<Satellite> sats)
 		{
-			BinSerializer.BinSerializer.SerializeObject<List<Satellite>>(SatsDataFilePath, sats); 
+			new BinSerializer.BinSerializer().SerializeObject<List<Satellite>>(SatsDataFilePath, sats); 
 		}
 
 		private List<Satellite> LoadSats()
 		{
-			return BinSerializer.BinSerializer.DeserializeObject<List<Satellite>>(SatsDataFilePath);
+			return new BinSerializer.BinSerializer().DeserializeObject<List<Satellite>>(SatsDataFilePath, (s, args) => { OnProgress(args); });
 		}
 
 		public SpaceTrack(String UserName, String Password)
@@ -113,10 +115,14 @@ namespace SpaceTrack
 						sr.ReadLine();						
 					}
 					OnStatus("Генерация орбитальных данных...");
+					var fullCount = data.Count / 3;
+					var step = fullCount / c_maxNumber;
 					for (int i = 0; i < data.Count; i += 3)
 					{
-						if (i > 300)
+						if (i > c_maxNumber*3)
 							break;
+						if ((i / 3) == step)
+							continue;
 						try
 						{
 							Tle tle = new Tle(data[i], data[i+1], data[i+2]);
@@ -193,7 +199,7 @@ namespace SpaceTrack
 		private List<Satellite> GetSatellites(bool Cache = true)
 		{
 			var CurDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-			string predicateValues = "/class/tle_latest/ORDINAL/1/EPOCH/%3Enow-30/orderby/NORAD_CAT_ID%20desc/format/3le";
+			string predicateValues = "/class/tle_latest/ORDINAL/1/EPOCH/%3Enow-30/orderby/NORAD_CAT_ID%20desc/format/3le/distinct/true";
 			string request = uriBase + requestController + requestAction + predicateValues;
 			using (var client = new WebClientEx())
 			{
@@ -215,8 +221,8 @@ namespace SpaceTrack
 							{
 								if (stringData[i].Contains("DEB"))
 									continue;
-								if (sats.Count > 100)
-									break;
+								//if (sats.Count > c_maxNumber)
+								//	break;
 								Tle tle = new Tle(stringData[i], stringData[i + 1], stringData[i + 2]);
 								sw.WriteLine(stringData[i]);
 								sw.WriteLine(stringData[i+1]);

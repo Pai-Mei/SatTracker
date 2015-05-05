@@ -16,6 +16,7 @@ namespace SatTracker
 	public partial class fmViewer : Form
 	{
 		public TimeSpan TimeShift = new TimeSpan();
+		public DateTime LastTimeStamp;
 		public DateTime CurrentTimeStamp
 		{
 			get { return DateTime.UtcNow.Add(TimeShift); } //new DateTime(DateTime.Now.Year, 6, 21);
@@ -35,7 +36,7 @@ namespace SatTracker
 		Timer timer = new Timer();
 
 		CenterViewCamera cam = new CenterViewCamera();
-		private void InitGL()
+		public void InitGL()
 		{
 			Glut.glutInit();
 			Glut.glutInitDisplayMode(Glut.GLUT_RGB | Glut.GLUT_DOUBLE | Glut.GLUT_DEPTH);
@@ -88,9 +89,10 @@ namespace SatTracker
 
 		public fmViewer()
 		{
+			LastTimeStamp = CurrentTimeStamp.Subtract(new TimeSpan(0, 1, 1));
 			InitializeComponent();
 			anT.InitializeContexts();
-			timer.Interval = 50;
+			timer.Interval = 40;
 			timer.Tick += (s, e) =>
 			{
 				mouse_Events();
@@ -106,7 +108,7 @@ namespace SatTracker
 			InitGL();
 		}
 
-		private void Draw()
+		public void Draw()
 		{
 			try
 			{
@@ -130,8 +132,9 @@ namespace SatTracker
 				Gl.glDisable(Gl.GL_LIGHT0);
 				Gl.glDisable(Gl.GL_LIGHTING);
 				DrawAxis(cam.Radius * 2, 1);
-				DrawItems(10);
-				DrawOrbit(2, 128);
+				
+				DrawOrbit(1, 128);
+				DrawItems(2);
 				Gl.glPopMatrix();
 				Gl.glFlush();
 
@@ -170,9 +173,9 @@ namespace SatTracker
 				Gl.glBegin(Gl.GL_LINE_LOOP);
 				for (Int32 i = 0; i < p; i++)
 				{
-					var Pos = Sat.PositionEci(new DateTime().Add(new TimeSpan(0, 0, (int)(Sat.Orbit.Period.TotalSeconds * i / p))));
+					var Pos = Sat.PositionEci(DateTime.UtcNow.Add(new TimeSpan(0, 0, (int)(Sat.Orbit.Period.TotalSeconds * i / p))));
 					Gl.glColor3f(1.0f, 1.0f, 1.0f);
-					Gl.glVertex3d(Pos.Position.X, Pos.Position.Z, Pos.Position.Y);
+					Gl.glVertex3d(Pos.Position.X, Pos.Position.Y, Pos.Position.Z);
 				}
 				Gl.glEnd();
 			}
@@ -182,16 +185,27 @@ namespace SatTracker
 		{
 			if ((this.MdiParent as fmMain).Sats == null)
 				return;
-			foreach (var Sat in (this.MdiParent as fmMain).Sats)
+			if (CurrentTimeStamp.Subtract(LastTimeStamp).TotalMinutes > 1)
 			{
-				if (Sat == null)
+				(this.MdiParent as fmMain).SatPos.Clear();
+				foreach (var sat in (this.MdiParent as fmMain).Sats)
+				{
+					var Pos = sat.PositionEci(sat.Orbit.EpochTime.Subtract(CurrentTimeStamp).TotalMinutes);
+					(this.MdiParent as fmMain).SatPos.Add(Pos);
+				}
+				LastTimeStamp = CurrentTimeStamp;
+			}
+			foreach (var sp in (this.MdiParent as fmMain).SatPos)
+			{
+				if (sp == null)
 					return;
-				var Pos = Sat.PositionEci(0/*CurrentTimeStamp*/);
+
+				
 				Gl.glPointSize(w);
 				Gl.glEnable(Gl.GL_POINT_SMOOTH);
 				Gl.glBegin(Gl.GL_POINTS);
 				Gl.glColor3f(1.0f, 1.0f, 1.0f);
-				Gl.glVertex3d(Pos.Position.X, Pos.Position.Z, Pos.Position.Y);
+				Gl.glVertex3d(sp.Position.X, sp.Position.Y, sp.Position.Z);
 				Gl.glEnd();
 			}
 		}
@@ -404,6 +418,11 @@ namespace SatTracker
 		{
 			var Delta = e.NewValue - e.OldValue;
 			WheelDelta = Delta;
+		}
+
+		private void fmViewer_FormClosing(object sender, FormClosingEventArgs e)
+		{
+			e.Cancel = true;
 		}
 	}
 

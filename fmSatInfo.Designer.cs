@@ -99,6 +99,7 @@
 			this.Location = new System.Drawing.Point(550, 0);
 			this.Name = "fmSatInfo";
 			this.Text = "Данные";
+			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.fmSatInfo_FormClosing);
 			this.Load += new System.EventHandler(this.fmSatInfo_Load);
 			this.groupBox1.ResumeLayout(false);
 			this.ResumeLayout(false);

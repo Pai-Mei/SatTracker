@@ -12,19 +12,20 @@ namespace SatTracker
 {
 	public partial class fmMain : Form
 	{
-		private fmSatInfo m_Info;
-		private fmViewer m_Viewer;
+		public fmSatInfo Info;
+		public fmViewer Viewer;
 		private SpaceTrack.SpaceTrack m_ST;
 
 		public List<Eci> SatPos = new List<Eci>();
 		public List<Satellite> Sats = new List<Satellite>();
 		public List<Satellite> SelectedSats = new List<Satellite>();
+		public SpaceTrack.SpaceTrack ST { get { return m_ST; } }
 
 		public fmMain()
 		{
 			InitializeComponent();
-			m_Info = new fmSatInfo();
-			m_Viewer = new fmViewer();
+			Info = new fmSatInfo();
+			Viewer = new fmViewer();
 		}
 
 		private void fmMain_Load(object sender, EventArgs e)
@@ -39,16 +40,35 @@ namespace SatTracker
 			m_ST = auth.ST;
 			Sats = m_ST.AllSats;
 			auth.Dispose();
-			m_Viewer.MdiParent = this;
-			m_Viewer.Show();
-			m_Info.MdiParent = this;
-			m_Info.DesktopLocation = new Point(500, 1);
-			m_Info.Show();
+			Viewer.MdiParent = this;
+			Viewer.Show();
+			Info.MdiParent = this;
+			Info.DesktopLocation = new Point(500, 1);
+			Info.Show();
 		}
 
 		private void выходToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			this.Close();
+		}
+
+		internal void SetStatus(string p)
+		{
+			this.StatusText.Text = p;
+		}
+
+		private void fmMain_FormClosing(object sender, FormClosingEventArgs e)
+		{
+			foreach(var form in this.MdiChildren)
+			{
+				form.Dispose();
+			}
+			Application.Exit();
+		}
+
+		private void toolStripButton1_Click(object sender, EventArgs e)
+		{
+			Viewer.InitGL();
 		}
 	}
 }

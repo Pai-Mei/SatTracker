@@ -30,7 +30,16 @@ namespace SatTracker
 			var sats = (this.MdiParent as fmMain).Sats;
 			var selSats = (this.MdiParent as fmMain).SelectedSats;
 			selSats.Clear();
-			selSats.Add(sats[listBox1.SelectedIndex]);
+			(this.MdiParent as fmMain).SetStatus("Обновление данных...");
+			var data = (this.MdiParent as fmMain).ST.GetSatellites(new string[] {sats[listBox1.SelectedIndex].Orbit.SatNoradId});
+			selSats.AddRange(data);
+			(this.MdiParent as fmMain).SetStatus("Данные обновлены.");
+			(this.MdiParent as fmMain).Viewer.Draw();
+		}
+
+		private void fmSatInfo_FormClosing(object sender, FormClosingEventArgs e)
+		{
+			e.Cancel = true;
 		}
 
 	}

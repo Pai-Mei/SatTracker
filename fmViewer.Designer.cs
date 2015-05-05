@@ -59,7 +59,8 @@
 			this.ClientSize = new System.Drawing.Size(585, 362);
 			this.Controls.Add(this.anT);
 			this.Name = "fmViewer";
-			this.Text = "Form1";
+			this.Text = "Визуализация";
+			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.fmViewer_FormClosing);
 			this.Load += new System.EventHandler(this.Form1_Load);
 			this.Resize += new System.EventHandler(this.Form1_Resize);
 			this.ResumeLayout(false);
