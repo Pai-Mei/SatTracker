@@ -7,10 +7,44 @@ using System.IO;
 using System.Collections.Specialized;
 using Zeptomoby.OrbitTools;
 
+using System.Xml.Serialization;
+
 namespace SpaceTrack
 {
 	public class SpaceTrack
 	{
+		public class StatusEventArgs : EventArgs
+		{
+			public String Status { get; set; }
+
+			public StatusEventArgs()
+			{
+
+			}
+
+			public StatusEventArgs(string Status)
+			{
+				this.Status = Status;
+			}
+		}
+
+		public class ProgressEventArgs : EventArgs
+		{
+			public int MaxValue { get; set; }
+			public int CurrentValue { get; set; }
+
+			public ProgressEventArgs ()
+			{
+
+			}
+
+			public ProgressEventArgs(int Current, int Max)
+			{
+				MaxValue = Max;
+				CurrentValue = Current;
+			}
+		}
+
 		class NoAuthException : Exception
 		{ }
 
@@ -23,28 +57,84 @@ namespace SpaceTrack
 
 		public List<Satellite> AllSats { get; set; }
 
+		private readonly string SatsDataFilePath = Environment.CurrentDirectory + "\\sats.bin";
+
+		private void SaveSats(List<Satellite> sats)
+		{
+			BinSerializer.BinSerializer.SerializeObject<List<Satellite>>(SatsDataFilePath, sats); 
+		}
+
+		private List<Satellite> LoadSats()
+		{
+			return BinSerializer.BinSerializer.DeserializeObject<List<Satellite>>(SatsDataFilePath);
+		}
+
 		public SpaceTrack(String UserName, String Password)
 		{
-			var CurDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+			
 			this.UserName = UserName;
 			this.Password = Password;
-			if (!File.Exists(CurDir + "/satdata.dat"))
+		}
+
+		public void Load(bool Refresh)
+		{
+			var CurDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+			if (!File.Exists(CurDir + "/satdata.dat") || Refresh)
 			{
+				OnStatus("Загрузка данных из базы...");
 				AllSats = GetSatellites();
-			} else {
-				using (var sr = new StreamReader(CurDir + "/satdata.dat"))
+			}
+			else
+			{
+				if (File.Exists(SatsDataFilePath))
 				{
+					OnStatus("Загрузка данных из файла...");
+					AllSats = LoadSats();
+					if (AllSats == null)
+					{
+						OnStatus("Ошибка загрузки данных из файла...");
+						File.Delete(SatsDataFilePath);
+					}
+					else
+						return;
+				}
+				using (var sr = new StreamReader(CurDir + "\\satdata.dat"))
+				{
+					OnStatus("Чтение последнего запроса к базе...");
+					AllSats = new List<Satellite>();
+					var data = new List<string>();
 					while (!sr.EndOfStream)
 					{
-						var str1 = sr.ReadLine();
-						var str2 = sr.ReadLine();
-						var str3 = sr.ReadLine();
-						Tle tle = new Tle(str1, str2, str3);
-						Satellite sat = new Satellite(tle);
-						AllSats.Add(sat);
+						data.Add(sr.ReadLine()); // line 0
+						sr.ReadLine();
+						data.Add(sr.ReadLine()); // line 1
+						sr.ReadLine();
+						data.Add(sr.ReadLine()); // line 2
+						sr.ReadLine();						
 					}
+					OnStatus("Генерация орбитальных данных...");
+					for (int i = 0; i < data.Count; i += 3)
+					{
+						if (i > 300)
+							break;
+						try
+						{
+							Tle tle = new Tle(data[i], data[i+1], data[i+2]);
+							Satellite sat = new Satellite(tle);
+							AllSats.Add(sat);
+							OnProgress(new ProgressEventArgs(i, data.Count));
+						}
+						catch
+						{
+
+						}
+					}
+					OnStatus("Сохранение данных в файл...");
+					SaveSats(AllSats);
+
 				}
 			}
+			OnStatus("Загрузка завершена!");
 		}
 
 		public class WebClientEx : WebClient
@@ -75,50 +165,69 @@ namespace SpaceTrack
                 };
 
 			// Generate the URL for the API Query and return the response
-			var response2 = client.UploadValues(uriBase + "/auth/login", data); 
-			//if (response2.Count() > 0)
-				return true;
-			//else
-			//	return false;
+			try
+			{
+				var response2 = client.UploadValues(uriBase + "/auth/login", data);
+				string request = "https://www.space-track.org/basicspacedata/query/class/tle_latest/NORAD_CAT_ID/01317/orderby/NORAD_CAT_ID asc/limit/1/format/3le/metadata/false";
+				var response4 = client.DownloadData(request);
+				if (response4.Count() > 0)
+					return true;
+				else
+					return false;
+			}
+			catch
+			{
+				return false;
+			}
 		}
 
 		public Boolean Authentication()
 		{
+			OnStatus("Авторизация...");
 			using (var client = new WebClientEx())
 			{
 				return Auth(client);
 			}
 		}
 
-		private List<Satellite> GetSatellites()
+		private List<Satellite> GetSatellites(bool Cache = true)
 		{
 			var CurDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 			string predicateValues = "/class/tle_latest/ORDINAL/1/EPOCH/%3Enow-30/orderby/NORAD_CAT_ID%20desc/format/3le";
 			string request = uriBase + requestController + requestAction + predicateValues;
 			using (var client = new WebClientEx())
 			{
-					
 				if (Auth(client))
 				{
 					var response4 = client.DownloadData(request);
 					var stringData = System.Text.Encoding.Default.GetString(response4).Split('\n');
+					using (var sw = new StreamWriter(CurDir + "/lastrequest.dat"))
+					{
+						sw.Write(System.Text.Encoding.Default.GetString(response4));
+					}
 					var sats = new List<Satellite>();
 					using (var sw = new StreamWriter(CurDir + "/satdata.dat"))
 					{
-						sw.Write(response4);
-					}
-						for (Int32 i = 0; i < stringData.Length - 1; i++)
+						for (Int32 i = 0; i < stringData.Length - 1; i+=3)
 						{
-							
 							try
 							{
+								if (stringData[i].Contains("DEB"))
+									continue;
 								Tle tle = new Tle(stringData[i], stringData[i + 1], stringData[i + 2]);
+								sw.WriteLine(stringData[i]);
+								sw.WriteLine(stringData[i+1]);
+								sw.WriteLine(stringData[i+2]);
 								Satellite sat = new Satellite(tle);
 								sats.Add(sat);
+								OnProgress(new ProgressEventArgs(i, stringData.Length - 1));
 							}
 							catch { }
 						}
+					}
+					SaveSats(sats);
 					return (sats);
+					
 				}
 				else
 				{
@@ -146,6 +255,7 @@ namespace SpaceTrack
 						Tle tle = new Tle(stringData[i], stringData[i + 1], stringData[i + 2]);
 						Satellite sat = new Satellite(tle);
 						result.Add(sat);
+						OnProgress(new ProgressEventArgs(i, stringData.Length - 1));
 					}
 					return result;
 				}
@@ -175,6 +285,7 @@ namespace SpaceTrack
 						Tle tle = new Tle(stringData[i], stringData[i + 1], stringData[i + 2]);
 						Satellite sat = new Satellite(tle);
 						result.Add(sat);
+						OnProgress(new ProgressEventArgs(i, stringData.Length - 1));
 					}
 					return result;
 				}
@@ -246,6 +357,28 @@ namespace SpaceTrack
 					throw new NoAuthException();
 				}
 			}
+		}
+
+		public event EventHandler<ProgressEventArgs> Progress;
+
+		public event EventHandler<StatusEventArgs> Status; 
+
+		protected virtual void OnProgress(ProgressEventArgs args)
+		{
+			if (Progress != null)
+				Progress(this, args);
+		}
+
+		protected virtual void OnStatus(StatusEventArgs args)
+		{
+			if (Status != null)
+				Status(this, args);
+		}
+
+		protected virtual void OnStatus(String status)
+		{
+			if (Status != null)
+				Status(this, new StatusEventArgs(status));
 		}
 	} 
 }

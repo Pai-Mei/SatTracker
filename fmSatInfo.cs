@@ -16,5 +16,22 @@ namespace SatTracker
 			InitializeComponent();
 		}
 
+		private void fmSatInfo_Load(object sender, EventArgs e)
+		{
+			var sats = (this.MdiParent as fmMain).Sats;
+			foreach (var sat in sats)
+			{
+				listBox1.Items.Add(sat.Name);
+			}
+		}
+
+		private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
+		{
+			var sats = (this.MdiParent as fmMain).Sats;
+			var selSats = (this.MdiParent as fmMain).SelectedSats;
+			selSats.Clear();
+			selSats.Add(sats[listBox1.SelectedIndex]);
+		}
+
 	}
 }

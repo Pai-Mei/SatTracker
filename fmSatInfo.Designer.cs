@@ -52,7 +52,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.textBox1.Location = new System.Drawing.Point(112, 6);
 			this.textBox1.Name = "textBox1";
-			this.textBox1.Size = new System.Drawing.Size(141, 20);
+			this.textBox1.Size = new System.Drawing.Size(80, 20);
 			this.textBox1.TabIndex = 1;
 			// 
 			// listBox1
@@ -61,8 +61,9 @@
 			this.listBox1.FormattingEnabled = true;
 			this.listBox1.Location = new System.Drawing.Point(3, 16);
 			this.listBox1.Name = "listBox1";
-			this.listBox1.Size = new System.Drawing.Size(274, 449);
+			this.listBox1.Size = new System.Drawing.Size(213, 298);
 			this.listBox1.TabIndex = 2;
+			this.listBox1.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
 			// 
 			// groupBox1
 			// 
@@ -72,14 +73,15 @@
 			this.groupBox1.Controls.Add(this.listBox1);
 			this.groupBox1.Location = new System.Drawing.Point(12, 33);
 			this.groupBox1.Name = "groupBox1";
-			this.groupBox1.Size = new System.Drawing.Size(280, 468);
+			this.groupBox1.Size = new System.Drawing.Size(219, 317);
 			this.groupBox1.TabIndex = 3;
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "Текущие спутники";
 			// 
 			// button1
 			// 
-			this.button1.Location = new System.Drawing.Point(263, 4);
+			this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.button1.Location = new System.Drawing.Point(202, 4);
 			this.button1.Name = "button1";
 			this.button1.Size = new System.Drawing.Size(29, 23);
 			this.button1.TabIndex = 4;
@@ -89,13 +91,15 @@
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(304, 513);
+			this.ClientSize = new System.Drawing.Size(243, 362);
 			this.Controls.Add(this.button1);
 			this.Controls.Add(this.groupBox1);
 			this.Controls.Add(this.textBox1);
 			this.Controls.Add(this.label1);
+			this.Location = new System.Drawing.Point(550, 0);
 			this.Name = "fmSatInfo";
 			this.Text = "Данные";
+			this.Load += new System.EventHandler(this.fmSatInfo_Load);
 			this.groupBox1.ResumeLayout(false);
 			this.ResumeLayout(false);
 			this.PerformLayout();

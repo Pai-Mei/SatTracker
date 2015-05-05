@@ -44,7 +44,7 @@
 			this.anT.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.anT.Location = new System.Drawing.Point(0, 0);
 			this.anT.Name = "anT";
-			this.anT.Size = new System.Drawing.Size(735, 401);
+			this.anT.Size = new System.Drawing.Size(585, 362);
 			this.anT.StencilBits = ((byte)(0));
 			this.anT.TabIndex = 0;
 			this.anT.Scroll += new System.Windows.Forms.ScrollEventHandler(this.anT_Scroll);
@@ -52,13 +52,13 @@
 			this.anT.MouseMove += new System.Windows.Forms.MouseEventHandler(this.anT_MouseMove);
 			this.anT.MouseUp += new System.Windows.Forms.MouseEventHandler(this.anT_MouseUp);
 			// 
-			// Form1
+			// fmViewer
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(735, 401);
+			this.ClientSize = new System.Drawing.Size(585, 362);
 			this.Controls.Add(this.anT);
-			this.Name = "Form1";
+			this.Name = "fmViewer";
 			this.Text = "Form1";
 			this.Load += new System.EventHandler(this.Form1_Load);
 			this.Resize += new System.EventHandler(this.Form1_Resize);

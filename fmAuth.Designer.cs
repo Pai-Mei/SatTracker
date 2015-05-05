@@ -34,6 +34,10 @@
 			this.textBoxPassword = new System.Windows.Forms.TextBox();
 			this.button1 = new System.Windows.Forms.Button();
 			this.progressBar1 = new System.Windows.Forms.ProgressBar();
+			this.checkBoxRefresh = new System.Windows.Forms.CheckBox();
+			this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+			this.StatusText = new System.Windows.Forms.ToolStripStatusLabel();
+			this.statusStrip1.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// textBoxLogin
@@ -73,7 +77,7 @@
 			// 
 			// button1
 			// 
-			this.button1.Location = new System.Drawing.Point(102, 87);
+			this.button1.Location = new System.Drawing.Point(105, 115);
 			this.button1.Name = "button1";
 			this.button1.Size = new System.Drawing.Size(75, 23);
 			this.button1.TabIndex = 4;
@@ -83,16 +87,45 @@
 			// 
 			// progressBar1
 			// 
-			this.progressBar1.Location = new System.Drawing.Point(12, 68);
+			this.progressBar1.Location = new System.Drawing.Point(15, 96);
 			this.progressBar1.Name = "progressBar1";
 			this.progressBar1.Size = new System.Drawing.Size(260, 13);
 			this.progressBar1.TabIndex = 5;
+			// 
+			// checkBoxRefresh
+			// 
+			this.checkBoxRefresh.AutoSize = true;
+			this.checkBoxRefresh.Checked = true;
+			this.checkBoxRefresh.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.checkBoxRefresh.Location = new System.Drawing.Point(15, 73);
+			this.checkBoxRefresh.Name = "checkBoxRefresh";
+			this.checkBoxRefresh.Size = new System.Drawing.Size(116, 17);
+			this.checkBoxRefresh.TabIndex = 6;
+			this.checkBoxRefresh.Text = "Обновить данные";
+			this.checkBoxRefresh.UseVisualStyleBackColor = true;
+			// 
+			// statusStrip1
+			// 
+			this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.StatusText});
+			this.statusStrip1.Location = new System.Drawing.Point(0, 141);
+			this.statusStrip1.Name = "statusStrip1";
+			this.statusStrip1.Size = new System.Drawing.Size(284, 22);
+			this.statusStrip1.TabIndex = 7;
+			this.statusStrip1.Text = "statusStrip1";
+			// 
+			// StatusText
+			// 
+			this.StatusText.Name = "StatusText";
+			this.StatusText.Size = new System.Drawing.Size(0, 17);
 			// 
 			// fmAuth
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(284, 117);
+			this.ClientSize = new System.Drawing.Size(284, 163);
+			this.Controls.Add(this.statusStrip1);
+			this.Controls.Add(this.checkBoxRefresh);
 			this.Controls.Add(this.progressBar1);
 			this.Controls.Add(this.button1);
 			this.Controls.Add(this.textBoxPassword);
@@ -104,6 +137,9 @@
 			this.MinimizeBox = false;
 			this.Name = "fmAuth";
 			this.Text = "Данные для авторизации";
+			this.Load += new System.EventHandler(this.fmAuth_Load);
+			this.statusStrip1.ResumeLayout(false);
+			this.statusStrip1.PerformLayout();
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -117,5 +153,8 @@
 		private System.Windows.Forms.TextBox textBoxPassword;
 		private System.Windows.Forms.Button button1;
 		private System.Windows.Forms.ProgressBar progressBar1;
+		private System.Windows.Forms.CheckBox checkBoxRefresh;
+		private System.Windows.Forms.StatusStrip statusStrip1;
+		private System.Windows.Forms.ToolStripStatusLabel StatusText;
 	}
 }

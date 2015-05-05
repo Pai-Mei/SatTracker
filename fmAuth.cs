@@ -11,17 +11,74 @@ namespace SatTracker
 {
 	public partial class fmAuth : Form
 	{
+		public SpaceTrack.SpaceTrack ST;
+
 		public fmAuth()
 		{
 			InitializeComponent();
 		}
 
+		delegate void ProgressChangeCallback(SpaceTrack.SpaceTrack.ProgressEventArgs args);
+		delegate void StatusChangeCallback(SpaceTrack.SpaceTrack.StatusEventArgs args);
+
+		private void ProgressChange(SpaceTrack.SpaceTrack.ProgressEventArgs args)
+		{
+			progressBar1.Maximum = args.MaxValue;
+			progressBar1.Value = args.CurrentValue;
+		}
+
+		private void StatusChange(SpaceTrack.SpaceTrack.StatusEventArgs args)
+		{
+			StatusText.Text = args.Status;
+		}
+
 		private void button1_Click(object sender, EventArgs e)
 		{
-			this.DialogResult = System.Windows.Forms.DialogResult.OK;
-			//SpaceTrack.SpaceTrack st = new SpaceTrack.SpaceTrack(textBoxLogin.Text, textBoxPassword.Text);
-			SpaceTrack.SpaceTrack st = new SpaceTrack.SpaceTrack("stratarozumu@gmail.com", "StrataRozumu-e47c8");
-			this.Close();
+			button1.Enabled = false;
+			this.DialogResult = System.Windows.Forms.DialogResult.None;
+			ST = new SpaceTrack.SpaceTrack(textBoxLogin.Text, textBoxPassword.Text);
+			ST.Progress += (s, args) => {
+				if (!progressBar1.InvokeRequired)
+				{
+					ProgressChange(args);
+				}
+				else
+				{
+					this.Invoke(new ProgressChangeCallback(ProgressChange), args);
+				}
+			};
+			ST.Status += (s, args) => 
+			{
+				if (statusStrip1.InvokeRequired)
+				{
+					StatusChange(args);
+				}
+				else
+				{
+					this.Invoke(new StatusChangeCallback(StatusChange), args);
+				}
+			};
+			if (!ST.Authentication())
+			{
+				DialogResult = System.Windows.Forms.DialogResult.Abort;
+				MessageBox.Show("Авторизация не удалась!\n Проверьте логин и пароль.", "Ошибка авторизации!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				this.Close();
+				return;
+			}
+			BackgroundWorker bw = new BackgroundWorker();
+			bw.DoWork += (s, args) => { ST.Load(checkBoxRefresh.Checked); };
+			bw.RunWorkerCompleted += (s, args) => 
+			{
+				DialogResult = System.Windows.Forms.DialogResult.OK;
+				this.Close(); 
+			};
+			bw.RunWorkerAsync();
+			
+		}
+
+		private void fmAuth_Load(object sender, EventArgs e)
+		{
+
 		}
 	}
 }

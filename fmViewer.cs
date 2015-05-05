@@ -162,7 +162,7 @@ namespace SatTracker
 		{
 			if ((this.MdiParent as fmMain).Sats == null)
 				return;
-			foreach (var Sat in (this.MdiParent as fmMain).Sats)
+			foreach (var Sat in (this.MdiParent as fmMain).SelectedSats)
 			{
 				if (Sat == null)
 					return;
@@ -170,7 +170,7 @@ namespace SatTracker
 				Gl.glBegin(Gl.GL_LINE_LOOP);
 				for (Int32 i = 0; i < p; i++)
 				{
-					var Pos = Sat.PositionEci(DateTime.UtcNow.Add(new TimeSpan(0, 0, (int)(Sat.Orbit.Period.TotalSeconds * i / p))));
+					var Pos = Sat.PositionEci(new DateTime().Add(new TimeSpan(0, 0, (int)(Sat.Orbit.Period.TotalSeconds * i / p))));
 					Gl.glColor3f(1.0f, 1.0f, 1.0f);
 					Gl.glVertex3d(Pos.Position.X, Pos.Position.Z, Pos.Position.Y);
 				}
@@ -186,7 +186,7 @@ namespace SatTracker
 			{
 				if (Sat == null)
 					return;
-				var Pos = Sat.PositionEci(CurrentTimeStamp);
+				var Pos = Sat.PositionEci(0/*CurrentTimeStamp*/);
 				Gl.glPointSize(w);
 				Gl.glEnable(Gl.GL_POINT_SMOOTH);
 				Gl.glBegin(Gl.GL_POINTS);
