@@ -206,6 +206,7 @@ namespace SpaceTrack
 						sw.Write(System.Text.Encoding.Default.GetString(response4));
 					}
 					var sats = new List<Satellite>();
+					
 					using (var sw = new StreamWriter(CurDir + "/satdata.dat"))
 					{
 						for (Int32 i = 0; i < stringData.Length - 1; i+=3)
@@ -214,6 +215,8 @@ namespace SpaceTrack
 							{
 								if (stringData[i].Contains("DEB"))
 									continue;
+								if (sats.Count > 100)
+									break;
 								Tle tle = new Tle(stringData[i], stringData[i + 1], stringData[i + 2]);
 								sw.WriteLine(stringData[i]);
 								sw.WriteLine(stringData[i+1]);
