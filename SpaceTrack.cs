@@ -196,10 +196,49 @@ namespace SpaceTrack
 			}
 		}
 
+		private List<Satellite> GetSatellites(Double Perigee, Double Apogee)
+		{
+			var CurDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+			string predicateValues = "/class/tle_latest/ORDINAL/1/EPOCH/%3Enow-30/APOGEE/>"+Perigee.ToString()+"/PERIGEE/<"+Apogee.ToString()+"/orderby/APOGEE%20asc/format/3le/distinct/true";
+			string request = uriBase + requestController + requestAction + predicateValues;
+			using (var client = new WebClientEx())
+			{
+				if (Auth(client))
+				{
+					var response4 = client.DownloadData(request);
+					var stringData = System.Text.Encoding.Default.GetString(response4).Split('\n');
+					using (var sw = new StreamWriter(CurDir + "/lastrequest.dat"))
+					{
+						sw.Write(System.Text.Encoding.Default.GetString(response4));
+					}
+					var sats = new List<Satellite>();
+					for (Int32 i = 0; i < stringData.Length - 1; i += 3)
+					{
+						try
+						{
+							if (stringData[i].Contains("DEB"))
+								continue;
+							Tle tle = new Tle(stringData[i], stringData[i + 1], stringData[i + 2]);
+							Satellite sat = new Satellite(tle);
+							sats.Add(sat);
+							OnProgress(new ProgressEventArgs(i, stringData.Length - 1));
+						}
+						catch { }
+					}
+					return (sats);
+
+				}
+				else
+				{
+					throw new NoAuthException();
+				}
+			}
+		}
+
 		private List<Satellite> GetSatellites(bool Cache = true)
 		{
 			var CurDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-			string predicateValues = "/class/tle_latest/ORDINAL/1/EPOCH/%3Enow-30/orderby/NORAD_CAT_ID%20desc/format/3le/distinct/true";
+			string predicateValues = "/class/tle_latest/ORDINAL/1/EPOCH/%3Enow-30/orderby/APOGEE%20desc/format/3le/distinct/true";
 			string request = uriBase + requestController + requestAction + predicateValues;
 			using (var client = new WebClientEx())
 			{
