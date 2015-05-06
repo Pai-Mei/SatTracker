@@ -185,7 +185,7 @@ namespace SatTracker
 		{
 			if ((this.MdiParent as fmMain).Sats == null)
 				return;
-			if (CurrentTimeStamp.Subtract(LastTimeStamp).TotalMinutes > 1)
+			if (CurrentTimeStamp.Subtract(LastTimeStamp).TotalSeconds > 10)
 			{
 				(this.MdiParent as fmMain).SatPos.Clear();
 				foreach (var sat in (this.MdiParent as fmMain).Sats)

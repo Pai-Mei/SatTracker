@@ -70,5 +70,17 @@ namespace SatTracker
 		{
 			Viewer.InitGL();
 		}
+
+		private void симуляцияToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			fmSim sim = new fmSim(Sats.ToList());
+			sim.MdiParent = this;
+			sim.Show();
+		}
+
+		private void настройкиToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+
+		}
 	}
 }
