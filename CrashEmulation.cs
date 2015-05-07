@@ -6,9 +6,79 @@ using System.Text;
 using System.Threading.Tasks;
 using Zeptomoby.OrbitTools;
 
-
 namespace SatTracker
 {
+	public class SatVector: Vector
+		{
+			public Satellite Satellite { get; set; }
+
+			public SatVector(Double x, Double y, Double z):base(x, y, z)
+			{
+
+			}
+
+			public SatVector(Vector vect, Satellite sat):base(vect.X, vect.Y, vect.Z)
+			{
+				Satellite = sat;
+			}
+		}
+
+	public class GeomentryContainer<T> where T : Vector
+	{
+		public Vector Min { get; set; }
+		public Vector Max { get; set; }
+
+		private Double m_Step;
+		private Double m_Radius;
+		private int m_HalfSize;
+
+		private List<T>[, ,] m_Cells;
+
+		public GeomentryContainer(Double MaxRadius, Double step = 100)
+		{
+			m_HalfSize = (int)Math.Floor(MaxRadius / step) + 1;
+			this.m_Step = step;
+			this.m_Radius = step * m_HalfSize;
+			m_Cells = new List<T>[m_HalfSize * 2, m_HalfSize * 2, m_HalfSize * 2];
+		}
+
+		public List<T> GetData(Double x, Double y, Double z)
+		{
+			int xIndex = (int)Math.Floor(x / m_Step) + m_HalfSize;
+			int yIndex = (int)Math.Floor(y / m_Step) + m_HalfSize;
+			int zIndex = (int)Math.Floor(z / m_Step) + m_HalfSize;
+			if (xIndex > m_Cells.Length || yIndex > m_Cells.Length || zIndex > m_Cells.Length)
+				return null;
+			if (m_Cells[xIndex, yIndex, zIndex] == null)
+				m_Cells[xIndex, yIndex, zIndex] = new List<T>();
+			return m_Cells[xIndex, yIndex, zIndex];
+		}
+
+		public List<T> GetData(T v)
+		{
+			return GetData(v.X, v.Y, v.Z);
+		}
+
+		public void Add(T sv)
+		{
+			if (sv == null)
+				return;
+			var cell = GetData(sv);
+			if(cell != null)
+				cell.Add(sv);
+		}
+
+		public void Remove(T sv)
+		{
+			if (sv == null)
+				return;
+			var cell = GetData(sv);
+			if (cell == null) return;
+			if(cell.Contains(sv))
+				cell.Remove(sv);
+		}
+	}
+
 	public class CrashEmulation
 	{
 		public class SituationEventArgs : EventArgs
@@ -43,13 +113,17 @@ namespace SatTracker
 			}
 		}
 
+		private SatVector[] positions;
+		private GeomentryContainer<SatVector> map;
+
 		private List<Satellite> m_sats;
-		private Eci[] positions;
 
 		private TimeSpan SimulationTime;
 		private DateTime SimulationStart;
 		private TimeSpan SimulationStep;
 		private double CrashDistance;
+
+		private bool flagDemoCrash = false;
 
 		public CrashEmulation(List<Satellite> sats, DateTime SimStartTime, TimeSpan step, Double CrashDist)
 		{
@@ -57,6 +131,7 @@ namespace SatTracker
 			this.m_sats = sats;
 			this.SimulationStep = step;
 			this.CrashDistance = CrashDist;
+			map = new GeomentryContainer<SatVector>(50000, 1000);
 		}
 
 		private bool flagStop = false;
@@ -65,7 +140,10 @@ namespace SatTracker
 		{
 			flagStop = false;
 			var worker = new BackgroundWorker();
-			worker.DoWork += (s, args) => { while(!flagStop) Step(); };
+			worker.DoWork += (s, args) => 
+			{
+				while(!flagStop) Step(); 
+			};
 			worker.RunWorkerCompleted += (s, args) => {  };
 			worker.RunWorkerAsync();
 		}
@@ -78,7 +156,7 @@ namespace SatTracker
 		private void Step()
 		{
 			if (positions == null)
-				positions = new Eci[m_sats.Count];
+				positions = new SatVector[m_sats.Count];
 			Parallel.For(0, m_sats.Count, (i) =>
 			{
 				try
@@ -86,25 +164,35 @@ namespace SatTracker
 					var startEpoch = SimulationStart.Subtract(m_sats[i].Orbit.EpochTime);
 					while (startEpoch > m_sats[i].Orbit.Period)
 						startEpoch = startEpoch.Subtract(m_sats[i].Orbit.Period);
-					positions[i] = m_sats[i].PositionEci(startEpoch.TotalMinutes + SimulationTime.TotalMinutes);
+					map.Remove(positions[i]);
+					positions[i] = new SatVector(m_sats[i].PositionEci(startEpoch.TotalMinutes + SimulationTime.TotalMinutes).Position, m_sats[i]);
+					map.Add(positions[i]);
 				}
 				catch
 				{
 
 				}
 			});
+
+			if(!flagDemoCrash)
+				OnCrash(new List<Satellite>() { m_sats[0], m_sats[1]}, SimulationTime);
+
 			for (int i = 0; i < positions.Length; i++)
 			{
-				for (int j = 0; j < positions.Length; j++)
+				var p = positions[i];
+				var ps = map.GetData(p);
+				if (ps == null)
+					continue;
+				foreach (var item in ps)
 				{
-					if (i == j)
-						continue;
-					var v = new Vector(positions[i].Position);
-					v.Sub(positions[j].Position);
-					if (v.Magnitude() < CrashDistance)
-						OnCrash(new List<Satellite>() { m_sats[i], m_sats[j] }, SimulationTime);
+					var dist = (p.X - item.X) * (p.X - item.X) +
+						(p.Y - item.Y) * (p.Y - item.Y) + 
+						(p.Z - item.Z) * (p.Z - item.Z);
+					if (dist > CrashDistance * CrashDistance)
+						OnCrash(new List<Satellite>() { p.Satellite, item.Satellite }, SimulationTime);
 				}
 			}
+			
 			OnStep(SimulationTime);
 			SimulationTime = SimulationTime.Add(SimulationStep);
 		}

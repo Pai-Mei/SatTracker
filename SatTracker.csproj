@@ -63,6 +63,12 @@
     <Compile Include="BinSerializer.cs" />
     <Compile Include="Camera.cs" />
     <Compile Include="CrashEmulation.cs" />
+    <Compile Include="fmFilter.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="fmFilter.Designer.cs">
+      <DependentUpon>fmFilter.cs</DependentUpon>
+    </Compile>
     <Compile Include="fmMain.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -99,6 +105,9 @@
     <Compile Include="Xml.cs" />
     <EmbeddedResource Include="fmAuth.resx">
       <DependentUpon>fmAuth.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fmFilter.resx">
+      <DependentUpon>fmFilter.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="fmMain.resx">
       <DependentUpon>fmMain.cs</DependentUpon>

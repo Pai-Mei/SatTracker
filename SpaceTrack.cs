@@ -203,14 +203,17 @@ namespace SpaceTrack
 			string request = uriBase + requestController + requestAction + predicateValues;
 			using (var client = new WebClientEx())
 			{
+				OnStatus("Соединение с базой NORAD...");
 				if (Auth(client))
 				{
+					OnStatus("Загрузка данных из базы...");
 					var response4 = client.DownloadData(request);
 					var stringData = System.Text.Encoding.Default.GetString(response4).Split('\n');
 					using (var sw = new StreamWriter(CurDir + "/lastrequest.dat"))
 					{
 						sw.Write(System.Text.Encoding.Default.GetString(response4));
 					}
+					OnStatus("Генерация орбитальных данных...");
 					var sats = new List<Satellite>();
 					for (Int32 i = 0; i < stringData.Length - 1; i += 3)
 					{
@@ -225,6 +228,7 @@ namespace SpaceTrack
 						}
 						catch { }
 					}
+					OnStatus("Загрузка данных завершена!");
 					return (sats);
 
 				}
@@ -427,6 +431,11 @@ namespace SpaceTrack
 		{
 			if (Status != null)
 				Status(this, new StatusEventArgs(status));
+		}
+
+		internal void Load(double min, double max)
+		{
+			AllSats = GetSatellites(min, max);
 		}
 	} 
 }

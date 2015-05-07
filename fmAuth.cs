@@ -65,8 +65,16 @@ namespace SatTracker
 				this.Close();
 				return;
 			}
+			fmFilter filt = new fmFilter();
+			if(checkBoxRefresh.Checked)
+				filt.ShowDialog();
 			BackgroundWorker bw = new BackgroundWorker();
-			bw.DoWork += (s, args) => { ST.Load(checkBoxRefresh.Checked); };
+			bw.DoWork += (s, args) => { 
+				if(filt.Max == -1 && filt.Min == -1)
+					ST.Load(checkBoxRefresh.Checked); 
+				else
+					ST.Load(filt.Min, filt.Max); 
+			};
 			bw.RunWorkerCompleted += (s, args) => 
 			{
 				DialogResult = System.Windows.Forms.DialogResult.OK;

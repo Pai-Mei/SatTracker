@@ -16,7 +16,7 @@ namespace SatTracker
 
 		public fmSim(List<Satellite> sats)
 		{
-			sim = new CrashEmulation(sats, DateTime.UtcNow, new TimeSpan(0, 1, 0), 1.0);
+			sim = new CrashEmulation(sats, DateTime.UtcNow, new TimeSpan(0, 1, 0), 0.2);
 			sim.Crash += sim_Crash;
 			sim.StepSituiation += sim_StepSituiation;
 			InitializeComponent();
