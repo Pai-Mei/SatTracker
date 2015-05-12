@@ -14,6 +14,7 @@ namespace SatTracker
 	{
 		public fmSatInfo Info;
 		public fmViewer Viewer;
+		public Settings Settings;
 		private SpaceTrack.SpaceTrack m_ST;
 
 		public List<Eci> SatPos = new List<Eci>();
@@ -37,6 +38,7 @@ namespace SatTracker
 				this.Close();
 				return;
 			}
+			Settings = Settings.Load();
 			m_ST = auth.ST;
 			Sats = m_ST.AllSats;
 			auth.Dispose();
@@ -80,7 +82,9 @@ namespace SatTracker
 
 		private void настройкиToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-
+			var sd = new fmSettings();
+			sd.MdiParent = this;
+			sd.Show();
 		}
 	}
 }

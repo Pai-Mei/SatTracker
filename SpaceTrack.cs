@@ -436,6 +436,7 @@ namespace SpaceTrack
 		internal void Load(double min, double max)
 		{
 			AllSats = GetSatellites(min, max);
+			SaveSats(AllSats);
 		}
 	} 
 }

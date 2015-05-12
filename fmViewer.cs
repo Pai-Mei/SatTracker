@@ -126,13 +126,15 @@ namespace SatTracker
 				Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_AMBIENT_AND_DIFFUSE, light_diffuse);
 				Gl.glLightfv(Gl.GL_LIGHT0, Gl.GL_POSITION, light_position);
 				Gl.glPushMatrix();
+
 				Gl.glEnable(Gl.GL_LIGHTING);
 				Gl.glEnable(Gl.GL_LIGHT0);
 				DrawEarth();
 				Gl.glDisable(Gl.GL_LIGHT0);
 				Gl.glDisable(Gl.GL_LIGHTING);
+				Gl.glPopMatrix();
+				Gl.glPushMatrix();
 				DrawAxis(cam.Radius * 2, 1);
-				
 				DrawOrbit(1, 128);
 				DrawItems(2);
 				Gl.glPopMatrix();
@@ -175,7 +177,7 @@ namespace SatTracker
 				{
 					var Pos = Sat.PositionEci(DateTime.UtcNow.Add(new TimeSpan(0, 0, (int)(Sat.Orbit.Period.TotalSeconds * i / p))));
 					Gl.glColor3f(1.0f, 1.0f, 1.0f);
-					Gl.glVertex3d(Pos.Position.X, Pos.Position.Y, Pos.Position.Z);
+					Gl.glVertex3d(Pos.Position.X, Pos.Position.Z, Pos.Position.Y);
 				}
 				Gl.glEnd();
 			}
@@ -190,7 +192,10 @@ namespace SatTracker
 				(this.MdiParent as fmMain).SatPos.Clear();
 				foreach (var sat in (this.MdiParent as fmMain).Sats)
 				{
-					var Pos = sat.PositionEci(sat.Orbit.EpochTime.Subtract(CurrentTimeStamp).TotalMinutes);
+					var time = sat.Orbit.EpochTime.Subtract(CurrentTimeStamp).TotalMinutes;
+					while (time > sat.Orbit.Period.TotalMinutes)
+						time -= sat.Orbit.Period.TotalMinutes;
+					var Pos = sat.PositionEci(time);
 					(this.MdiParent as fmMain).SatPos.Add(Pos);
 				}
 				LastTimeStamp = CurrentTimeStamp;
@@ -205,7 +210,7 @@ namespace SatTracker
 				Gl.glEnable(Gl.GL_POINT_SMOOTH);
 				Gl.glBegin(Gl.GL_POINTS);
 				Gl.glColor3f(1.0f, 1.0f, 1.0f);
-				Gl.glVertex3d(sp.Position.X, sp.Position.Y, sp.Position.Z);
+				Gl.glVertex3d(sp.Position.X, sp.Position.Z, sp.Position.Y);
 				Gl.glEnd();
 			}
 		}
@@ -273,20 +278,14 @@ namespace SatTracker
 		private void DrawEarth()
 		{
 			float[] MatrixColor = new float[] { 1.0f, 1.0f, 1.0f, 1.0f };
-			//CurrentTimeStamp = CurrentTimeStamp.AddDays(1);
-			//CurrentTimeStamp = CurrentTimeStamp.AddMinutes(10);
 			Gl.glRotated(270, 1, 0, 0);
-
 			Gl.glRotated(YearAngle, 0, 0, 1);
-			YearAngle = GetYearAngle(CurrentTimeStamp);// += 1f;
-
+			YearAngle = GetYearAngle(CurrentTimeStamp);
 			Gl.glRotated(-23.439281, 0, 1, 0);	//наклон оси Земли относительно оси Солнца
 			Gl.glRotated(90, 0, 0, 1);
-
 			Gl.glScalef(1f, 1f, 1f - EarthPolarK);
-
-			Gl.glRotated(DayAngle, 0, 0, 1);
 			DayAngle = GetDayAngle(CurrentTimeStamp);//+= 10;
+			Gl.glRotated(DayAngle, 0, 0, 1);			
 			Gl.glEnable(Gl.GL_TEXTURE_2D);
 			// создаем привязку к только что созданной текстуре
 			//Gl.glBindTexture(Gl.GL_TEXTURE_2D, texObject);

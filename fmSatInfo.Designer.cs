@@ -34,8 +34,6 @@
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.colorDialog1 = new System.Windows.Forms.ColorDialog();
 			this.button1 = new System.Windows.Forms.Button();
-			this.comboBoxOrbit = new System.Windows.Forms.ComboBox();
-			this.label2 = new System.Windows.Forms.Label();
 			this.groupBox1.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -63,7 +61,7 @@
 			this.listBox1.FormattingEnabled = true;
 			this.listBox1.Location = new System.Drawing.Point(3, 16);
 			this.listBox1.Name = "listBox1";
-			this.listBox1.Size = new System.Drawing.Size(213, 270);
+			this.listBox1.Size = new System.Drawing.Size(213, 298);
 			this.listBox1.TabIndex = 2;
 			this.listBox1.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
 			// 
@@ -73,9 +71,9 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.groupBox1.Controls.Add(this.listBox1);
-			this.groupBox1.Location = new System.Drawing.Point(12, 61);
+			this.groupBox1.Location = new System.Drawing.Point(12, 33);
 			this.groupBox1.Name = "groupBox1";
-			this.groupBox1.Size = new System.Drawing.Size(219, 289);
+			this.groupBox1.Size = new System.Drawing.Size(219, 317);
 			this.groupBox1.TabIndex = 3;
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "Текущие спутники";
@@ -90,32 +88,11 @@
 			this.button1.UseVisualStyleBackColor = true;
 			this.button1.Click += new System.EventHandler(this.button1_Click);
 			// 
-			// comboBoxOrbit
-			// 
-			this.comboBoxOrbit.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.comboBoxOrbit.FormattingEnabled = true;
-			this.comboBoxOrbit.Location = new System.Drawing.Point(65, 34);
-			this.comboBoxOrbit.Name = "comboBoxOrbit";
-			this.comboBoxOrbit.Size = new System.Drawing.Size(163, 21);
-			this.comboBoxOrbit.TabIndex = 5;
-			// 
-			// label2
-			// 
-			this.label2.AutoSize = true;
-			this.label2.Location = new System.Drawing.Point(12, 37);
-			this.label2.Name = "label2";
-			this.label2.Size = new System.Drawing.Size(47, 13);
-			this.label2.TabIndex = 6;
-			this.label2.Text = "Орбита:";
-			// 
 			// fmSatInfo
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(243, 362);
-			this.Controls.Add(this.label2);
-			this.Controls.Add(this.comboBoxOrbit);
 			this.Controls.Add(this.button1);
 			this.Controls.Add(this.groupBox1);
 			this.Controls.Add(this.textBox1);
@@ -139,7 +116,5 @@
 		private System.Windows.Forms.GroupBox groupBox1;
 		private System.Windows.Forms.ColorDialog colorDialog1;
 		private System.Windows.Forms.Button button1;
-		private System.Windows.Forms.ComboBox comboBoxOrbit;
-		private System.Windows.Forms.Label label2;
 	}
 }

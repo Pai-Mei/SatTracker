@@ -145,7 +145,8 @@
 			this.Controls.Add(this.radioButton2);
 			this.Controls.Add(this.radioButton1);
 			this.Name = "fmFilter";
-			this.Text = "fmFilter";
+			this.Text = "Фильтр";
+			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.fmFilter_FormClosing);
 			this.ResumeLayout(false);
 			this.PerformLayout();
 

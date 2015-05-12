@@ -14,6 +14,9 @@ namespace SatTracker
 	{
 		private CrashEmulation sim;
 
+		delegate void StepSituation();
+		delegate void CrashSituation();
+
 		public fmSim(List<Satellite> sats)
 		{
 			sim = new CrashEmulation(sats, DateTime.UtcNow, new TimeSpan(0, 1, 0), 0.2);
@@ -26,7 +29,7 @@ namespace SatTracker
 		{
 			if (statusStrip1.InvokeRequired)
 			{
-				this.Invoke(new AsyncCallback((r) => { SimTimeText.Text = e.EllapsedTime.ToString(); }));
+				this.Invoke(new Action(() => { SimTimeText.Text = e.EllapsedTime.ToString(); }));
 			}
 			else
 			{
@@ -36,10 +39,10 @@ namespace SatTracker
 
 		void sim_Crash(object sender, CrashEmulation.CrashEventArgs e)
 		{
-			string text = "Спутники " + e.Sats[0].Name + " и " + e.Sats[1].Name + " столкнутся в " + e.Time.ToString();
+			string text = "Спутники " + e.Sats[0].Name.TrimEnd('\r') + " и " + e.Sats[1].Name.TrimEnd('\r') + " разойдустся на расстоянии "+e.Dist.ToString("0.00")+"км. в " + e.Time.ToString() + "\n";
 			if (richTextBox1.InvokeRequired)
 			{
-				this.Invoke(new AsyncCallback((r) => { richTextBox1.Text += text; }));
+				this.Invoke(new Action(() => { richTextBox1.Text += text; }));
 			} else 
 			{
 				richTextBox1.Text += text;

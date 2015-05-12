@@ -48,9 +48,13 @@ namespace Xml
 				}
 				catch (Exception e)
 				{
+					return null;
 				}
-				FileStream.Close();
-				FileStream.Dispose();
+				finally
+				{
+					FileStream.Close();
+					FileStream.Dispose();
+				}
 			}
 			catch
 			{

@@ -47,7 +47,7 @@ namespace SatTracker
 			int xIndex = (int)Math.Floor(x / m_Step) + m_HalfSize;
 			int yIndex = (int)Math.Floor(y / m_Step) + m_HalfSize;
 			int zIndex = (int)Math.Floor(z / m_Step) + m_HalfSize;
-			if (xIndex > m_Cells.Length || yIndex > m_Cells.Length || zIndex > m_Cells.Length)
+			if (xIndex >= m_HalfSize * 2 || yIndex >= m_HalfSize * 2 || zIndex >= m_HalfSize * 2)
 				return null;
 			if (m_Cells[xIndex, yIndex, zIndex] == null)
 				m_Cells[xIndex, yIndex, zIndex] = new List<T>();
@@ -100,16 +100,17 @@ namespace SatTracker
 		{
 			public List<Satellite> Sats { get; set; }
 			public TimeSpan Time { get; set; }
-
+			public Double Dist { get; set; }
 			public CrashEventArgs()
 			{
 
 			}
 
-			public CrashEventArgs(List<Satellite> Sats, TimeSpan Time)
+			public CrashEventArgs(List<Satellite> Sats, Double dist, TimeSpan Time)
 			{
 				this.Sats = Sats;
 				this.Time = Time;
+				this.Dist = dist;
 			}
 		}
 
@@ -131,7 +132,7 @@ namespace SatTracker
 			this.m_sats = sats;
 			this.SimulationStep = step;
 			this.CrashDistance = CrashDist;
-			map = new GeomentryContainer<SatVector>(50000, 1000);
+			map = new GeomentryContainer<SatVector>(200000, 1000);
 		}
 
 		private bool flagStop = false;
@@ -155,44 +156,52 @@ namespace SatTracker
 
 		private void Step()
 		{
-			if (positions == null)
-				positions = new SatVector[m_sats.Count];
-			Parallel.For(0, m_sats.Count, (i) =>
+			
+				if (positions == null)
+					positions = new SatVector[m_sats.Count];
+				Parallel.For(0, m_sats.Count, (i) =>
+				{
+					try
+					{
+						var startEpoch = SimulationStart.Subtract(m_sats[i].Orbit.EpochTime);
+						while (startEpoch > m_sats[i].Orbit.Period)
+							startEpoch = startEpoch.Subtract(m_sats[i].Orbit.Period);
+						map.Remove(positions[i]);
+						positions[i] = new SatVector(m_sats[i].PositionEci(startEpoch.TotalMinutes + SimulationTime.TotalMinutes).Position, m_sats[i]);
+						map.Add(positions[i]);
+					}
+					catch
+					{
+
+					}
+				});
+			try
 			{
-				try
+				for (int i = 0; i < positions.Length; i++)
 				{
-					var startEpoch = SimulationStart.Subtract(m_sats[i].Orbit.EpochTime);
-					while (startEpoch > m_sats[i].Orbit.Period)
-						startEpoch = startEpoch.Subtract(m_sats[i].Orbit.Period);
-					map.Remove(positions[i]);
-					positions[i] = new SatVector(m_sats[i].PositionEci(startEpoch.TotalMinutes + SimulationTime.TotalMinutes).Position, m_sats[i]);
-					map.Add(positions[i]);
-				}
-				catch
-				{
-
-				}
-			});
-
-			if(!flagDemoCrash)
-				OnCrash(new List<Satellite>() { m_sats[0], m_sats[1]}, SimulationTime);
-
-			for (int i = 0; i < positions.Length; i++)
-			{
-				var p = positions[i];
-				var ps = map.GetData(p);
-				if (ps == null)
-					continue;
-				foreach (var item in ps)
-				{
-					var dist = (p.X - item.X) * (p.X - item.X) +
-						(p.Y - item.Y) * (p.Y - item.Y) + 
-						(p.Z - item.Z) * (p.Z - item.Z);
-					if (dist > CrashDistance * CrashDistance)
-						OnCrash(new List<Satellite>() { p.Satellite, item.Satellite }, SimulationTime);
+					var p = positions[i];
+					var ps = map.GetData(p);
+					if (ps == null)
+						continue;
+					foreach (var item in ps)
+					{
+						if (item == null)
+							continue;
+						var dist = (p.X - item.X) * (p.X - item.X) +
+							(p.Y - item.Y) * (p.Y - item.Y) +
+							(p.Z - item.Z) * (p.Z - item.Z);
+						if (dist > 0 && dist < CrashDistance * CrashDistance && p.Satellite.Name.Trim() != item.Satellite.Name.Trim())
+						{
+							OnCrash(new List<Satellite>() { p.Satellite, item.Satellite }, Math.Sqrt(dist), SimulationTime);
+							Stop();
+						}
+					}
 				}
 			}
-			
+			catch
+			{
+
+			}
 			OnStep(SimulationTime);
 			SimulationTime = SimulationTime.Add(SimulationStep);
 		}
@@ -206,10 +215,10 @@ namespace SatTracker
 				StepSituiation(this, new SituationEventArgs(EllapsedTime));
 		}
 
-		protected virtual void OnCrash(List<Satellite> sats, TimeSpan Time)
+		protected virtual void OnCrash(List<Satellite> sats,Double dist, TimeSpan Time)
 		{
 			if (Crash != null)
-				Crash(this, new CrashEventArgs(sats, Time));
+				Crash(this, new CrashEventArgs(sats, dist, Time));
 		}
 
 	}

@@ -71,7 +71,7 @@ namespace SatTracker
 
 		private void button1_Click(object sender, EventArgs e)
 		{
-			CheckFilter();	
+			this.Close();
 		}
 		
 		private void radioButton3_CheckedChanged(object sender, EventArgs e)
@@ -87,6 +87,11 @@ namespace SatTracker
 		private void radioButton1_CheckedChanged(object sender, EventArgs e)
 		{
 			Checking();
+		}
+
+		private void fmFilter_FormClosing(object sender, FormClosingEventArgs e)
+		{
+			CheckFilter();
 		}
 	}
 }
