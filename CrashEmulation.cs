@@ -124,8 +124,6 @@ namespace SatTracker
 		private TimeSpan SimulationStep;
 		private double CrashDistance;
 
-		private bool flagDemoCrash = false;
-
 		public CrashEmulation(List<Satellite> sats, DateTime SimStartTime, TimeSpan step, Double CrashDist)
 		{
 			this.SimulationStart = SimStartTime;
