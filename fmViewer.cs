@@ -22,11 +22,12 @@ namespace SatTracker
 			get { return DateTime.UtcNow.Add(TimeShift); } //new DateTime(DateTime.Now.Year, 6, 21);
 		}
 
+		private Settings sets = null;
+
 		float DayAngle = 0;
 		float YearAngle = 0;
 		const float EarthR = 6378f;
 		const float EarthPolarK = 0.0033528f;
-		float GridP = 1000.0f;
 
 		Image img;
 		Bitmap image;
@@ -145,28 +146,11 @@ namespace SatTracker
 			catch { }
 		}
 
-		//private void DrawItems(double w)
-		//{
-		//	float[] MatrixColor = new float[] { 1.0f, 1.0f, 1.0f, 1.0f };
-		//	Gl.glMaterialfv(Gl.GL_FRONT_AND_BACK, Gl.GL_AMBIENT_AND_DIFFUSE, MatrixColor);
-		//	for (double j = -Math.PI; j < Math.PI; j += Math.PI / 64)
-		//	{
-		//		for (double i = -Math.PI; i < Math.PI; i += Math.PI/64)
-		//		{
-		//			float R = 10000.0f;
-		//			Gl.glPushMatrix();
-		//			Gl.glTranslated(Math.Sin(i) * Math.Cos(j) * R, Math.Cos(i) * Math.Cos(j) * R, Math.Sin(j)* R);
-		//			Glut.glutSolidSphere(w, 5, 5);
-		//			Gl.glPopMatrix();
-		//		}
-		//	}
-		//	Glut.glutSolidSphere(w, 5, 5);
-		//}
-
 		private void DrawOrbit(float w, int p)
 		{
 			if ((this.MdiParent as fmMain).Sats == null)
 				return;
+			var sets = (this.MdiParent as fmMain).Settings;
 			foreach (var Sat in (this.MdiParent as fmMain).SelectedSats)
 			{
 				if (Sat == null)
@@ -176,7 +160,7 @@ namespace SatTracker
 				for (Int32 i = 0; i < p; i++)
 				{
 					var Pos = Sat.PositionEci(DateTime.UtcNow.Add(new TimeSpan(0, 0, (int)(Sat.Orbit.Period.TotalSeconds * i / p))));
-					Gl.glColor3f(1.0f, 1.0f, 1.0f);
+					Gl.glColor3f(sets.OrbitColor.R, sets.OrbitColor.G, sets.OrbitColor.B);
 					Gl.glVertex3d(Pos.Position.X, Pos.Position.Z, Pos.Position.Y);
 				}
 				Gl.glEnd();
@@ -200,62 +184,46 @@ namespace SatTracker
 				}
 				LastTimeStamp = CurrentTimeStamp;
 			}
+			var sets = (this.MdiParent as fmMain).Settings;
 			foreach (var sp in (this.MdiParent as fmMain).SatPos)
 			{
 				if (sp == null)
 					return;
-
+				
 				
 				Gl.glPointSize(w);
 				Gl.glEnable(Gl.GL_POINT_SMOOTH);
 				Gl.glBegin(Gl.GL_POINTS);
-				Gl.glColor3f(1.0f, 1.0f, 1.0f);
+				Gl.glColor3f(sets.ObjectsColor.R, sets.ObjectsColor.G, sets.ObjectsColor.B);
 				Gl.glVertex3d(sp.Position.X, sp.Position.Z, sp.Position.Y);
 				Gl.glEnd();
 			}
 		}
 
-        private void DrawGrid(int x, float quad_size)
+        private void DrawAxis(float x, float width)
 		{
-			float[] MatrixOXOYColor = new float[] { 1, 1, 1, 1f };
+			var sets = (this.MdiParent as fmMain).Settings;
 
-			Gl.glBegin(Gl.GL_LINES);
+			var XColor = sets.AxisXColor;
+			var YColor = sets.AxisYColor;
+			var ZColor = sets.AxisZColor;
 
-			Gl.glMaterialfv(Gl.GL_FRONT, Gl.GL_AMBIENT_AND_DIFFUSE, MatrixOXOYColor);
-		
-			// Рисуем сетку 1х1 вдоль осей
-			for (float i = -x; i <= x; i += 1)
-			{
-				Gl.glBegin(Gl.GL_LINES);
-				// Ось Х
-				Gl.glVertex3f(-x * GridP * quad_size, 0, i * GridP * quad_size);
-				Gl.glVertex3f(x * GridP * quad_size, 0, i * GridP * quad_size);
-
-				// Ось Z
-				Gl.glVertex3f(i * GridP * quad_size, 0, -x * GridP * quad_size);
-				Gl.glVertex3f(i * GridP * quad_size, 0, x * GridP * quad_size);
-				Gl.glEnd();
-			}
-		}
-
-		private void DrawAxis(float x, float width)
-		{
 			Gl.glLineWidth(width);
 			Gl.glBegin(Gl.GL_LINES);
-
-			Gl.glColor3f(1.0f, 0.0f, 0.0f);
+			
+			Gl.glColor3i(XColor.R, XColor.G, XColor.B);
 			Gl.glVertex3f(-x, 0, 0);
-			Gl.glColor3f(1.0f, 0.0f, 0.0f);
+			Gl.glColor3f(XColor.R, XColor.G, XColor.B);
 			Gl.glVertex3f(x, 0, 0);
 
-			Gl.glColor3f(0.0f, 1.0f, 0.0f);
+			Gl.glColor3f(YColor.R, YColor.G, YColor.B);
 			Gl.glVertex3f(0, -x, 0);
-			Gl.glColor3f(0.0f, 1.0f, 0.0f);
+			Gl.glColor3f(YColor.R, YColor.G, YColor.B);
 			Gl.glVertex3f(0, x, 0);
 
-			Gl.glColor3f(0.0f, 0.0f, 1.0f);
+			Gl.glColor3f(ZColor.R, ZColor.G, ZColor.B);
 			Gl.glVertex3f(0, 0, -x);
-			Gl.glColor3f(0.0f, 0.0f, 1.0f);
+			Gl.glColor3f(ZColor.R, ZColor.G, ZColor.B);
 			Gl.glVertex3f(0, 0, x);
 			Gl.glEnd();
 			
