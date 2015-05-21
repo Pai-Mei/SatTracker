@@ -13,16 +13,14 @@ namespace SatTracker
 	public partial class fmSim : Form
 	{
 		private CrashEmulation sim;
+		private List<Satellite> satelites;
 
 		delegate void StepSituation();
 		delegate void CrashSituation();
 
 		public fmSim(List<Satellite> sats)
 		{
-			var sets = (this.MdiParent as fmMain).Settings;
-			sim = new CrashEmulation(sats, DateTime.UtcNow, sets.StepTime, sets.CriticalDistance);
-			sim.Crash += sim_Crash;
-			sim.StepSituiation += sim_StepSituiation;
+			satelites = sats;
 			InitializeComponent();
 		}
 
@@ -52,7 +50,10 @@ namespace SatTracker
 
 		private void fmSim_Load(object sender, EventArgs e)
 		{
-			
+			var sets = (this.MdiParent as fmMain).Settings;
+			sim = new CrashEmulation(satelites, DateTime.UtcNow, sets.StepTime, sets.CriticalDistance);
+			sim.Crash += sim_Crash;
+			sim.StepSituiation += sim_StepSituiation;			
 		}
 
 		private void toolStripButton1_Click(object sender, EventArgs e)

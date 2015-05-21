@@ -31,10 +31,10 @@
 			this.menuStrip1 = new System.Windows.Forms.MenuStrip();
 			this.файлToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.выходToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.симуляцияToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.настройкиToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.statusStrip1 = new System.Windows.Forms.StatusStrip();
 			this.StatusText = new System.Windows.Forms.ToolStripStatusLabel();
-			this.симуляцияToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip1.SuspendLayout();
 			this.statusStrip1.SuspendLayout();
 			this.SuspendLayout();
@@ -62,9 +62,16 @@
 			// выходToolStripMenuItem
 			// 
 			this.выходToolStripMenuItem.Name = "выходToolStripMenuItem";
-			this.выходToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.выходToolStripMenuItem.Size = new System.Drawing.Size(108, 22);
 			this.выходToolStripMenuItem.Text = "Выход";
 			this.выходToolStripMenuItem.Click += new System.EventHandler(this.выходToolStripMenuItem_Click);
+			// 
+			// симуляцияToolStripMenuItem
+			// 
+			this.симуляцияToolStripMenuItem.Name = "симуляцияToolStripMenuItem";
+			this.симуляцияToolStripMenuItem.Size = new System.Drawing.Size(82, 20);
+			this.симуляцияToolStripMenuItem.Text = "Симуляция";
+			this.симуляцияToolStripMenuItem.Click += new System.EventHandler(this.симуляцияToolStripMenuItem_Click);
 			// 
 			// настройкиToolStripMenuItem
 			// 
@@ -89,13 +96,6 @@
 			this.StatusText.Name = "StatusText";
 			this.StatusText.Size = new System.Drawing.Size(200, 17);
 			// 
-			// симуляцияToolStripMenuItem
-			// 
-			this.симуляцияToolStripMenuItem.Name = "симуляцияToolStripMenuItem";
-			this.симуляцияToolStripMenuItem.Size = new System.Drawing.Size(82, 20);
-			this.симуляцияToolStripMenuItem.Text = "Симуляция";
-			this.симуляцияToolStripMenuItem.Click += new System.EventHandler(this.симуляцияToolStripMenuItem_Click);
-			// 
 			// fmMain
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -106,7 +106,7 @@
 			this.IsMdiContainer = true;
 			this.MainMenuStrip = this.menuStrip1;
 			this.Name = "fmMain";
-			this.Text = "fmMain";
+			this.Text = "Околоземные объекты и их динамика";
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.fmMain_FormClosing);
 			this.Load += new System.EventHandler(this.fmMain_Load);
 			this.menuStrip1.ResumeLayout(false);
