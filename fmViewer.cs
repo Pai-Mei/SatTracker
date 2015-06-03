@@ -169,21 +169,25 @@ namespace SatTracker
 
 		private void DrawItems(float w)
 		{
-			if ((this.MdiParent as fmMain).Sats == null)
-				return;
-			if (CurrentTimeStamp.Subtract(LastTimeStamp).TotalSeconds > 10)
-			{
-				(this.MdiParent as fmMain).SatPos.Clear();
-				foreach (var sat in (this.MdiParent as fmMain).Sats)
-				{
-					var time = sat.Orbit.EpochTime.Subtract(CurrentTimeStamp).TotalMinutes;
-					while (time > sat.Orbit.Period.TotalMinutes)
-						time -= sat.Orbit.Period.TotalMinutes;
-					var Pos = sat.PositionEci(time);
-					(this.MdiParent as fmMain).SatPos.Add(Pos);
-				}
-				LastTimeStamp = CurrentTimeStamp;
-			}
+            try
+            {
+                if ((this.MdiParent as fmMain).Sats == null)
+                    return;
+                if (CurrentTimeStamp.Subtract(LastTimeStamp).TotalSeconds > 10)
+                {
+                    (this.MdiParent as fmMain).SatPos.Clear();
+                    foreach (var sat in (this.MdiParent as fmMain).Sats)
+                    {
+                        var time = sat.Orbit.EpochTime.Subtract(CurrentTimeStamp).TotalMinutes;
+                        while (time > sat.Orbit.Period.TotalMinutes)
+                            time -= sat.Orbit.Period.TotalMinutes;
+                        var Pos = sat.PositionEci(time);
+                        (this.MdiParent as fmMain).SatPos.Add(Pos);
+                    }
+                    LastTimeStamp = CurrentTimeStamp;
+                }
+            }
+            catch { }
 			var sets = (this.MdiParent as fmMain).Settings;
 			foreach (var sp in (this.MdiParent as fmMain).SatPos)
 			{

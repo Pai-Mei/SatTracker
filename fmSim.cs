@@ -12,6 +12,7 @@ namespace SatTracker
 {
 	public partial class fmSim : Form
 	{
+        private bool isSim = false;
 		private CrashEmulation sim;
 		private List<Satellite> satelites;
 
@@ -50,22 +51,43 @@ namespace SatTracker
 
 		private void fmSim_Load(object sender, EventArgs e)
 		{
-			var sets = (this.MdiParent as fmMain).Settings;
-			sim = new CrashEmulation(satelites, DateTime.UtcNow, sets.StepTime, sets.CriticalDistance);
-			sim.Crash += sim_Crash;
-			sim.StepSituiation += sim_StepSituiation;			
+            fmClusterSettings Csets = new fmClusterSettings();
+            Csets.ShowDialog();
+            if (Csets.Nodes != null && Csets.Nodes.Count > 0)
+            {
+                var sets = (this.MdiParent as fmMain).Settings;
+                var stepTime = new TimeSpan(0, 0, 0, 0, (int)(sets.StepTime.TotalMilliseconds / Csets.Nodes.Count));
+                sim = new CrashEmulation(satelites, DateTime.UtcNow, stepTime, sets.CriticalDistance);
+                sim.Crash += sim_Crash;
+                sim.StepSituiation += sim_StepSituiation;
+            }
+            else
+            {
+                var sets = (this.MdiParent as fmMain).Settings;
+                sim = new CrashEmulation(satelites, DateTime.UtcNow, sets.StepTime, sets.CriticalDistance);
+                sim.Crash += sim_Crash;
+                sim.StepSituiation += sim_StepSituiation;
+            }
 		}
 
 		private void toolStripButton1_Click(object sender, EventArgs e)
 		{
 			richTextBox1.Text += "Симуляция началась.\n";
 			sim.Start();
+            isSim = true;
 		}
 
 		private void toolStripButton2_Click(object sender, EventArgs e)
 		{
 			richTextBox1.Text += "Симуляция завершена.\n";
 			sim.Stop();
+            isSim = false;
 		}
+
+        private void fmSim_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (isSim)
+                e.Cancel = true;
+        }
 	}
 }
